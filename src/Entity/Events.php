@@ -7,56 +7,36 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=EventsRepository::class)
- */
+#[ORM\Entity(repositoryClass: EventsRepository::class)]
 class Events
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $name;
 
-    /**
-     * @ORM\Column(type="string", length=1024, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 1024, nullable: true)]
     private $description;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $uuid;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $mail;
 
-    /**
-     * @ORM\Column(type="boolean")
-     */
+    #[ORM\Column(type: 'boolean')]
     private $state;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Proposal::class, mappedBy="event_id", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: Proposal::class, mappedBy: 'event_id', orphanRemoval: true)]
     private $proposals;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Users::class, mappedBy="event_id", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: Users::class, mappedBy: 'event_id', orphanRemoval: true)]
     private $users;
 
-    /**
-     * @ORM\OneToMany(targetEntity=ResponseType1::class, mappedBy="event_id", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: ResponseType1::class, mappedBy: 'event_id', orphanRemoval: true)]
     private $responseType1s;
 
     public function __construct()

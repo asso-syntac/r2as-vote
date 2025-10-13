@@ -3,34 +3,36 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Events;
 use App\Entity\Proposal;
 use App\Entity\Users;
 use App\Entity\ResponseType1;
+use App\Repository\UsersRepository;
+use App\Repository\ProposalRepository;
+use App\Repository\ResponseType1Repository;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Doctrine\ORM\EntityManagerInterface;
 
 class VoteController extends AbstractController
 {
-    /**
-     * @Route("/vote/{uuid}", name="vote")
-     */
-    public function index(Request $request, $uuid)
-    {
-        $user = $this->getDoctrine()
-            ->getRepository(Users::class)
-            ->findOneBy(['uuid' => $uuid]);
+    #[Route('/vote/{uuid}', name: 'vote')]
+    public function index(
+        string $uuid,
+        UsersRepository $usersRepository,
+        ResponseType1Repository $responseType1Repository
+    ): Response {
+        $user = $usersRepository->findOneBy(['uuid' => $uuid]);
 
-        $factor = $this->getDoctrine()
-            ->getRepository(Users::class)
-            ->findOneBy(['uuid' => $uuid])
-            ->getFactor();
+        if (!$user) {
+            throw $this->createNotFoundException('User not found');
+        }
 
-        $event = $user -> getEventId();
-        $proposals = $event -> getProposals();
-        $responsesType1 = $this->getDoctrine()
-            ->getRepository(ResponseType1::class)
-            ->findBy(['user_id' => $user]);
+        $factor = $user->getFactor();
+        $event = $user->getEventId();
+        $proposals = $event->getProposals();
+        $responsesType1 = $responseType1Repository->findBy(['user_id' => $user]);
 
         $eventstate = $event->getState();
         if ($eventstate == false) {
@@ -38,7 +40,7 @@ class VoteController extends AbstractController
                 'user' => $user,
                 'uuid' => $uuid,
                 'event' => $event,
-            ]);    
+            ]);
         }
         $exist[] = '0';
         foreach ($responsesType1 as $response){
@@ -56,26 +58,29 @@ class VoteController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/vote/{uuid}/1/{proposalid}/{status}", name="submitvotetype1")
-     */
-    public function submitvotetype1(Request $request, $uuid, $proposalid, $status)
-    {
-        $user = $this->getDoctrine()
-            ->getRepository(Users::class)
-            ->findOneBy(['uuid' => $uuid]);
+    #[Route('/vote/{uuid}/1/{proposalid}/{status}', name: 'submitvotetype1')]
+    public function submitvotetype1(
+        string $uuid,
+        int $proposalid,
+        string $status,
+        UsersRepository $usersRepository,
+        ProposalRepository $proposalRepository,
+        ResponseType1Repository $responseType1Repository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $user = $usersRepository->findOneBy(['uuid' => $uuid]);
+        if (!$user) {
+            throw $this->createNotFoundException('User not found');
+        }
 
-        $proposal = $this->getDoctrine()
-            ->getRepository(Proposal::class)
-            ->findOneBy(['id' => $proposalid]);
+        $proposal = $proposalRepository->findOneBy(['id' => $proposalid]);
+        if (!$proposal) {
+            throw $this->createNotFoundException('Proposal not found');
+        }
 
-        $factor = $this->getDoctrine()
-            ->getRepository(Users::class)
-            ->findOneBy(['uuid' => $uuid])
-            ->getFactor();
+        $factor = $user->getFactor();
+        $event = $user->getEventId();
 
-        $event = $user -> getEventId();
-        $entityManager = $this->getDoctrine()->getManager();
         $vote = new ResponseType1();
         $vote->setEventId($event);
         $vote->setUserId($user);
@@ -93,16 +98,16 @@ class VoteController extends AbstractController
             $vote->setAbstention($factor);
         }
 
-        $vote_exist = $entityManager->getRepository(ResponseType1::class)->findBy(['user_id' => $user, 'proposal_id' => $proposal]);
+        $vote_exist = $responseType1Repository->findBy(['user_id' => $user, 'proposal_id' => $proposal]);
         if ($vote_exist) {
-            return $this->redirectToRoute('vote', ['uuid' => $uuid]);;
-        }else {
+            $this->addFlash('error', 'Vous avez déjà voté pour cette proposition.');
+            return $this->redirectToRoute('vote', ['uuid' => $uuid]);
+        } else {
             $entityManager->persist($vote);
             $entityManager->flush();
+            $this->addFlash('success', 'Votre vote a été enregistré avec succès.');
         }
 
-
-            return $this->redirectToRoute('vote', ['uuid' => $uuid, 'factor' => $factor]);
-        
+        return $this->redirectToRoute('vote', ['uuid' => $uuid, 'factor' => $factor]);
     }
 }

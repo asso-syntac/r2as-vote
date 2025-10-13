@@ -4,15 +4,107 @@
 
 {% block body %}
 
-<h1 class="display-4">Bienvenue sur l'outil de vote de R2AS !</h1>
-<p class="lead">Cet outil simple et gratuit permet d'organiser un vote électronique sans inscription.</p>
-<ul class="list-group list-group-flush">
-  <li class="list-group-item">Créez un vote en cliquant sur le bouton « <a href="/new-vote">Créer un vote</a> », renseignez le nom de votre campagne, sa description et indiquez votre adresse mail pour recevoir le lien d'administration.</li>
-  <li class="list-group-item">Ajoutez des propositions en cliquant sur le bouton « Ajouter une proposition », vos participants pourront se prononcer <b>pour</b>, <b>contre</b> ou <b>s'abstenir</b>. <i>D'autres modes de vote sont actuellement à l'étude</i>.</li>
-  <li class="list-group-item">Ajoutez des votants en cliquant sur le bouton « Ajouter un votant », définissez la pondération du vote (le nombre de voix de chaque votant), renseignez l'adresse mail sur laquelle le votant recevra son lien de vote personnel.</li>
-  <li class="list-group-item">Accédez aux résultats du vote via le bouton « Résultats ». Vous ne verrez pas les résultats nominativement, mais uniquement les résultats globaux.</li>
-</ul>
-<center><a class="btn btn-outline-success btn-lg" href="/new-vote" role="button">Créer un vote</a></center>
+<div class="max-w-4xl mx-auto">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+            Bienvenue sur l'outil de vote de R2AS !
+        </h1>
+        <p class="text-xl text-gray-600 mb-8">
+            Un outil simple et gratuit pour organiser vos votes électroniques sans inscription
+        </p>
+        <a href="/new-vote" class="inline-flex items-center px-8 py-3 bg-r2as-primary hover:bg-r2as-secondary text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Créer un vote
+        </a>
+    </div>
 
+    <!-- Features -->
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Comment ça marche ?</h2>
+
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-full bg-r2as-primary text-white font-bold text-lg">
+                        1
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Créez votre vote</h3>
+                    <p class="text-gray-600">
+                        Cliquez sur <a href="/new-vote" class="text-r2as-primary hover:text-r2as-secondary underline font-semibold">Créer un vote</a>,
+                        renseignez le nom de votre campagne, sa description et votre adresse mail pour recevoir le lien d'administration.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-full bg-r2as-primary text-white font-bold text-lg">
+                        2
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajoutez des propositions</h3>
+                    <p class="text-gray-600">
+                        Cliquez sur "Ajouter une proposition". Vos participants pourront se prononcer
+                        <span class="font-semibold text-green-600">pour</span>,
+                        <span class="font-semibold text-red-600">contre</span> ou
+                        <span class="font-semibold text-gray-600">s'abstenir</span>.
+                    </p>
+                    <p class="text-sm text-gray-500 italic mt-1">
+                        D'autres modes de vote sont actuellement à l'étude.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-full bg-r2as-primary text-white font-bold text-lg">
+                        3
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Invitez les votants</h3>
+                    <p class="text-gray-600">
+                        Ajoutez des votants en définissant la pondération du vote (nombre de voix).
+                        Chaque votant recevra un lien personnel par email.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-full bg-r2as-primary text-white font-bold text-lg">
+                        4
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Consultez les résultats</h3>
+                    <p class="text-gray-600">
+                        Accédez aux résultats globaux du vote. Les votes individuels restent anonymes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="mt-8 text-center">
+        <a href="/new-vote" class="inline-flex items-center px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Commencer maintenant
+        </a>
+    </div>
+</div>
 
 {% endblock %}

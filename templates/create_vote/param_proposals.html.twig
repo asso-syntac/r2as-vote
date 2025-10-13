@@ -1,30 +1,83 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ajout d'une proposition{% endblock %}
+{% block title %}Ajouter une proposition - {{ event.name }}{% endblock %}
 
 {% block body %}
 
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+        <a href="/param-vote/{{uuid}}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
+            ← {{ event.name }}
+        </a>
+    </div>
 
-<div class="example-wrapper">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Ajouter une proposition</h1>
+            <p class="text-gray-600">Les votants pourront voter pour, contre ou s'abstenir sur chaque proposition.</p>
+        </div>
 
-    <h1><a href="/param-vote/{{uuid}}">{{ event.name }}</a></h1>
+        <!-- Formulaire -->
+        {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
 
+        <div>
+            <label for="{{ form.name.vars.id }}" class="block text-sm font-medium text-gray-700 mb-2">
+                <span class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Nouvelle proposition
+                </span>
+            </label>
+            {{ form_widget(form.name, {'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-r2as-primary focus:border-transparent', 'placeholder': 'Exemple : Adopter le nouveau règlement intérieur'}}) }}
+            {{ form_errors(form.name) }}
+            <p class="mt-1 text-sm text-gray-500">Mode de réponse : Pour / Contre / Abstention</p>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+            <a href="/param-vote/{{uuid}}" class="text-gray-600 hover:text-gray-900 font-medium">
+                ← Annuler
+            </a>
+            {{ form_widget(form.save, {'label': 'Ajouter la proposition', 'attr': {'class': 'inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105'}}) }}
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+    {% if proposalss is not null and proposalss|length > 0 %}
+    <div class="mt-8 bg-white rounded-lg shadow-lg p-8">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Propositions enregistrées</h2>
+            <p class="text-sm text-gray-600">
+                <span class="font-semibold text-gray-900">{{ proposalss|length }}</span> proposition(s) au total
+            </p>
+        </div>
+
+        <div class="space-y-3">
+            {% for p in proposalss %}
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-150">
+                <div class="flex items-start flex-1">
+                    <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ p.name }}</p>
+                    </div>
+                </div>
+                <a href="/delete-proposal/{{ uuid }}/{{ p.id }}"
+                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette proposition ?')"
+                   class="inline-flex items-center px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition duration-150 ml-4">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Supprimer
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
-<div>
-{% form_theme form 'bootstrap_4_layout.html.twig' %}
 
-{{ form_start(form) }}
-{{ form_row(form.name, {'label': 'Votre nouvelle proposition (mode de réponse : pour / contre / abstention) :'}) }}
-{{ form_end(form) }}
-
-{% if proposalss is not null %}
-<h2>Propositions déjà enregistrées :</h2>
-<ul>
-{% for p in proposalss %}
-    <li>{{ p.name }} - <a href="/delete-proposal/{{ uuid }}/{{ p.id }}">Supprimer</a></li>
-{% endfor %}
-</ul>
-{% endif %}
-
-</div>
 {% endblock %}

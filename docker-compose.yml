@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  php:
+    build: .
+    container_name: r2as-vote-php
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env.local
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/app.db
+    networks:
+      - r2as-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: r2as-vote-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - r2as-network
+
+networks:
+  r2as-network:
+    driver: bridge

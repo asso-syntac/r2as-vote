@@ -1,21 +1,132 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Gestion d'une campagne de vote{% endblock %}
+{% block title %}Administration - {{ event.name }}{% endblock %}
 
 {% block body %}
 
+<div class="max-w-6xl mx-auto">
+    <!-- En-tête -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ event.name }}</h1>
+                <p class="text-gray-600 mb-4">{{ event.description }}</p>
 
-<div class="example-wrapper">
-    <h1>{{ event.name }} - page d'administration</h1>
-    <h2>{{ event.description }}</h2>
-    <p>Participation au vote actuellement {% if event.state %}activée{% else %}désactivée{% endif %}.</p>
+                <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if event.state %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                    <span class="w-2 h-2 rounded-full mr-2 {% if event.state %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
+                    Vote {% if event.state %}activé{% else %}désactivé{% endif %}
+                </div>
+            </div>
 
-<a class="btn btn-success" href="/param-users/{{ uuid }}">Ajouter un votant</a>
-<a class="btn btn-success" href="/param-users-batch/{{ uuid }}">Ajouter des votants en masse</a>
-<a class="btn btn-success" href="/list-users/{{ uuid }}">Gérer les votants</a>
-<a class="btn btn-success" href="/param-proposals/{{ uuid }}">Ajouter une proposition</a>
-<a class="btn btn-primary" href="/results/{{ uuid }}">Résultats</a>
-{% if event.state %}<a class="btn btn-outline-danger" href="/disable/{{ uuid }}" role="button">Désactiver le vote</a>{% else %}<a class="btn btn-outline-success" href="/enable/{{ uuid }}" role="button">Activer le vote</a>{% endif %}
+            <div>
+                {% if event.state %}
+                    <a href="/disable/{{ uuid }}" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Désactiver
+                    </a>
+                {% else %}
+                    <a href="/enable/{{ uuid }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Activer
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
+    <!-- Actions principales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Gestion des votants -->
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter un votant</h3>
+                <p class="text-gray-600 text-sm mb-4">Ajoutez un participant individuel au vote</p>
+                <a href="/param-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200">
+                    Ajouter
+                </a>
+            </div>
+        </div>
+
+        <!-- Import en masse -->
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Import en masse</h3>
+                <p class="text-gray-600 text-sm mb-4">Importez plusieurs votants via CSV</p>
+                <a href="/param-users-batch/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200">
+                    Importer
+                </a>
+            </div>
+        </div>
+
+        <!-- Gérer les votants -->
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-lg mb-4">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Gérer les votants</h3>
+                <p class="text-gray-600 text-sm mb-4">Consultez et modifiez la liste des votants</p>
+                <a href="/list-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-200">
+                    Gérer
+                </a>
+            </div>
+        </div>
+
+        <!-- Ajouter une proposition -->
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter une proposition</h3>
+                <p class="text-gray-600 text-sm mb-4">Créez une nouvelle question à voter</p>
+                <a href="/param-proposals/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200">
+                    Ajouter
+                </a>
+            </div>
+        </div>
+
+        <!-- Résultats -->
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 md:col-span-2">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 bg-r2as-primary bg-opacity-10 rounded-lg mb-4">
+                    <svg class="w-6 h-6 text-r2as-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Consulter les résultats</h3>
+                <p class="text-gray-600 text-sm mb-4">Visualisez les résultats du vote en temps réel</p>
+                <a href="/results/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-r2as-primary hover:bg-r2as-secondary text-white font-medium rounded-lg transition duration-200">
+                    Voir les résultats
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lien retour -->
+    <div class="mt-8 text-center">
+        <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">
+            ← Retour à l'accueil
+        </a>
+    </div>
 </div>
+
 {% endblock %}

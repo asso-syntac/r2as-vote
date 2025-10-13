@@ -1,51 +1,166 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Résultats !{% endblock %}
+{% block title %}Résultats - {{ event.name }}{% endblock %}
 
 {% block body %}
 
+<div class="max-w-6xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+        <a href="/param-vote/{{uuid}}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
+            ← {{ event.name }}
+        </a>
+    </div>
 
-<div class="example-wrapper">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Résultats du vote</h1>
+                <p class="text-gray-600">Synthèse des votes pour chaque proposition</p>
+            </div>
+            <svg class="w-16 h-16 text-r2as-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+        </div>
+    </div>
 
-    <h1><a href="/param-vote/{{uuid}}">{{ event.name }}</a></h1>
+    <!-- Résultats par proposition -->
+    <div class="space-y-6 mb-8">
+        {% for p in proposals %}
+        {% set positive = '0' %}
+        {% set negative = '0' %}
+        {% set abstention = '0' %}
 
+        {% for r in responsesType1 %}
+            {% if r.proposal == p.id %}
+                {% set positive = positive + r.positive %}
+                {% set negative = negative + r.negative %}
+                {% set abstention = abstention + r.abstention %}
+            {% endif %}
+        {% endfor %}
+
+        {% set total = positive + negative + abstention %}
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">{{ p.name }}</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Pour -->
+                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-green-900 mb-1">Pour</p>
+                            <p class="text-3xl font-bold text-green-700">{{ positive }}</p>
+                        </div>
+                        <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                        </svg>
+                    </div>
+                    {% if total > 0 %}
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between text-xs text-green-700 mb-1">
+                            <span>{{ ((positive / total) * 100)|round(1) }}%</span>
+                        </div>
+                        <div class="w-full bg-green-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ ((positive / total) * 100)|round(1) }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Contre -->
+                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-red-900 mb-1">Contre</p>
+                            <p class="text-3xl font-bold text-red-700">{{ negative }}</p>
+                        </div>
+                        <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/>
+                        </svg>
+                    </div>
+                    {% if total > 0 %}
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between text-xs text-red-700 mb-1">
+                            <span>{{ ((negative / total) * 100)|round(1) }}%</span>
+                        </div>
+                        <div class="w-full bg-red-200 rounded-full h-2">
+                            <div class="bg-red-600 h-2 rounded-full" style="width: {{ ((negative / total) * 100)|round(1) }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Abstention -->
+                <div class="bg-gray-50 border-l-4 border-gray-400 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900 mb-1">Abstention</p>
+                            <p class="text-3xl font-bold text-gray-700">{{ abstention }}</p>
+                        </div>
+                        <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                    </div>
+                    {% if total > 0 %}
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between text-xs text-gray-700 mb-1">
+                            <span>{{ ((abstention / total) * 100)|round(1) }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-gray-500 h-2 rounded-full" style="width: {{ ((abstention / total) * 100)|round(1) }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="text-center text-sm text-gray-600 border-t pt-4">
+                Total des voix : <span class="font-semibold text-gray-900">{{ total }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Liste des votants -->
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Participation</h2>
+            <p class="text-gray-600">Votants ayant répondu à au moins une proposition</p>
+        </div>
+
+        {% set newArray = [] %}
+        {% for r in responsesType1 %}
+            {% if r.user.uuid not in newArray %}
+                {% set newArray = newArray|merge([r.user.uuid]) %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="mb-4">
+            <p class="text-sm text-gray-600">
+                <span class="font-semibold text-gray-900">{{ newArray|length }}</span> votant(s) ont participé
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% set displayedUsers = [] %}
+            {% for r in responsesType1 %}
+                {% if r.user.uuid not in displayedUsers %}
+                    <div class="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <svg class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-900 truncate">{{ r.user.name }}</p>
+                            <p class="text-xs text-gray-600 truncate">{{ r.user.mail }}</p>
+                        </div>
+                    </div>
+                    {% set displayedUsers = displayedUsers|merge([r.user.uuid]) %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 </div>
-<div>
 
-<h3>Résultats :</h3>
-
-{% for p in proposals %}
-
-{% set positive = '0' %}
-{% set negative = '0' %}
-{% set abstention = '0' %}
-
-    {% for r in responsesType1 %}
-        {% if r.proposal == p.id %}
-            {% set positive = positive + r.positive %}
-            {% set negative = negative + r.negative %}
-            {% set abstention = abstention + r.abstention %}
-        {% endif %}
-    {% endfor %}
-
-<h3>{{ p.name }}</h3>
-
-<b>Pour :</b> {{ positive }}<br>
-<b>Contre :</b> {{ negative }}<br>
-<b>Abstention :</b> {{ abstention }}<br>
-
-<hr class="my-4">
-{% endfor %}
-</div>
-
-<h3>Liste des votants ayant répondu à au moins une proposition :</h3>
-<ul>
-{% set newArray = [] %}
-  {% for r in responsesType1 %}
-  {% if r.user.uuid not in newArray %}
-   <li>{{ r.user.name }} - {{ r.user.mail }}</li>
-  {% set newArray = newArray|merge([r.user.uuid]) %}
-  {% endif %}
-{% endfor %}
-</ul>
 {% endblock %}

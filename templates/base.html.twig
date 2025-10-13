@@ -1,60 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr" class="h-full">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Bienvenue sur l'outil de vote d'R2AS{% endblock %}</title>
-        <link href="/assets/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-        <style type="text/css">
-            body {
-                background-image: url("/assets/vote.png");
-                background-repeat: no-repeat;
-                background-position: 20px 50px;
-                background-color: #d1d1d1;
-                height: 100%;
-                min-height: 7rem;
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}R2AS Vote - Outil de vote en ligne{% endblock %}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            'r2as-primary': '#2a1c69',
+                            'r2as-secondary': '#4a3c89',
+                        }
+                    }
+                }
             }
-            .container {
-                background: white;
-                padding: 1rem;
-                border-radius: 10px;
-                border: 1px solid #2a1c69;
-                border-radius: 10px;
-            }
-            .header {
-                padding-left: 5rem;
-                padding-right: 5rem;
-                padding-top: 1rem;
-                padding-bottom: 1.5rem;
-            }
-            .footer {
-                position: relative;
-                bottom: 0;
-                width: 100%;
-                height: 60px;
-                line-height: 60px;
-            }
-
-        </style>
-
+        </script>
         {% block stylesheets %}{% endblock %}
     </head>
-    <body>
-    <div class="header">
-    <a href="/"><img src="/assets/logo-r2as.png" width="400px"></a>
-    </div>
-    <div class="container">
-        {% block body %}{% endblock %}
-    </div>
+    <body class="h-full bg-gradient-to-br from-gray-50 to-gray-100">
+        <div class="min-h-full flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <a href="/" class="inline-block">
+                        <img src="/assets/logo-r2as.png" alt="R2AS Logo" class="h-16 w-auto">
+                    </a>
+                </div>
+            </header>
 
-    <footer class="footer">
-    <div class="container" style="background: transparent; padding-bottom: 0.2rem; border: transparent;">
-        <center>
-            <span class="text-black">
-                <a class="text" href="/">R2AS vote</a> : un service gratuit fourni par <a href="http://r2as.org/">R2AS</a> <u>sans aucune garantie</u>. <b>Aucun cookie</b>. Logiciel libre, <a href="https://github.com/cleming/r2as-vote">code source et informations</a>.
-            </span>
-        </center>
-    </div>
-    </footer>
+            <!-- Flash messages -->
+            {% for type, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                        <div class="rounded-md p-4 {% if type == 'success' %}bg-green-50 text-green-800{% elseif type == 'error' %}bg-red-50 text-red-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    {% if type == 'success' %}
+                                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    {% elseif type == 'error' %}
+                                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium">{{ message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            <!-- Main content -->
+            <main class="flex-1">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {% block body %}{% endblock %}
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-white border-t border-gray-200 mt-auto">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <p class="text-center text-sm text-gray-600">
+                        <a href="/" class="text-r2as-primary hover:text-r2as-secondary font-semibold">R2AS Vote</a> -
+                        Un service gratuit fourni par <a href="http://r2as.org/" class="text-r2as-primary hover:text-r2as-secondary">R2AS</a>
+                        sans aucune garantie. <span class="font-semibold">Aucun cookie</span>.
+                        Logiciel libre, <a href="https://github.com/cleming/r2as-vote" class="text-r2as-primary hover:text-r2as-secondary underline">code source et informations</a>.
+                    </p>
+                </div>
+            </footer>
+        </div>
         {% block javascripts %}{% endblock %}
     </body>
 </html>
