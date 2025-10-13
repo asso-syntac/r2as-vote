@@ -1,22 +1,15 @@
-FROM php:8.3-fpm
+FROM dunglas/frankenphp:latest-php8.3
 
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libicu-dev \
-    libzip-dev \
-    libxml2-dev \
-    && docker-php-ext-install \
+RUN install-php-extensions \
     intl \
     pdo \
     pdo_mysql \
     zip \
-    xml \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    xml
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+WORKDIR /app
 
 COPY composer.json composer.lock* ./
 
@@ -24,10 +17,12 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader --no-script
 
 COPY . .
 
+COPY Caddyfile /etc/caddy/Caddyfile
+
 RUN composer run-script --no-interaction post-install-cmd || true
 
-RUN chown -R www-data:www-data /var/www/html
+RUN chown -R www-data:www-data /app
 
-EXPOSE 9000
+EXPOSE 80 443
 
-CMD ["php-fpm"]
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
