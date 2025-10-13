@@ -1,29 +1,21 @@
 version: '3.8'
 
 services:
-  php:
+  frankenphp:
     build: .
-    container_name: r2as-vote-php
+    container_name: r2as-vote-frankenphp
+    ports:
+      - "8080:80"
+      - "8443:443"
     volumes:
-      - .:/var/www/html
+      - .:/app
+      - ./Caddyfile:/etc/caddy/Caddyfile
     env_file:
       - .env.local
     environment:
       - APP_ENV=dev
       - DATABASE_URL=sqlite:///%kernel.project_dir%/var/app.db
-    networks:
-      - r2as-network
-
-  nginx:
-    image: nginx:alpine
-    container_name: r2as-vote-nginx
-    ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - php
+      - SERVER_NAME=:80
     networks:
       - r2as-network
 
