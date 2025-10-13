@@ -18,11 +18,34 @@
             }
         </script>
         {% block stylesheets %}{% endblock %}
+        <style>
+            /* Améliore la visibilité du focus clavier */
+            :focus-visible {
+                outline: 3px solid #2a1c69;
+                outline-offset: 2px;
+            }
+            /* Style du lien d'accès rapide */
+            .skip-link {
+                position: absolute;
+                left: 0.5rem;
+                top: -40px;
+                background: #2a1c69;
+                color: #fff;
+                padding: 0.5rem 0.75rem;
+                border-radius: 0.375rem;
+                transition: top 0.2s ease;
+                z-index: 50;
+            }
+            .skip-link:focus {
+                top: 0.5rem;
+            }
+        </style>
     </head>
     <body class="h-full bg-gradient-to-br from-gray-50 to-gray-100">
         <div class="min-h-full flex flex-col">
+            <a href="#contenu-principal" class="skip-link">Aller au contenu principal</a>
             <!-- Header -->
-            <header class="bg-white shadow-sm">
+            <header class="bg-white shadow-sm" role="banner">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <a href="/" class="inline-block">
                         <img src="/assets/logo-r2as.png" alt="R2AS Logo" class="h-16 w-auto">
@@ -34,7 +57,8 @@
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                        <div class="rounded-md p-4 {% if type == 'success' %}bg-green-50 text-green-800{% elseif type == 'error' %}bg-red-50 text-red-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+                        <div class="rounded-md p-4 {% if type == 'success' %}bg-green-50 text-green-800{% elseif type == 'error' %}bg-red-50 text-red-800{% else %}bg-blue-50 text-blue-800{% endif %}"
+                             {% if type == 'error' %}role="alert" aria-live="assertive"{% else %}role="status" aria-live="polite"{% endif %}>
                             <div class="flex">
                                 <div class="flex-shrink-0">
                                     {% if type == 'success' %}
@@ -57,20 +81,20 @@
             {% endfor %}
 
             <!-- Main content -->
-            <main class="flex-1">
+            <main id="contenu-principal" class="flex-1" role="main">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {% block body %}{% endblock %}
                 </div>
             </main>
 
             <!-- Footer -->
-            <footer class="bg-white border-t border-gray-200 mt-auto">
+            <footer class="bg-white border-t border-gray-200 mt-auto" role="contentinfo">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <p class="text-center text-sm text-gray-600">
                         <a href="/" class="text-r2as-primary hover:text-r2as-secondary font-semibold">R2AS Vote</a> -
-                        Un service gratuit fourni par <a href="http://r2as.org/" class="text-r2as-primary hover:text-r2as-secondary">R2AS</a>
+                        Un service gratuit fourni par <a href="http://r2as.org/" class="text-r2as-primary hover:text-r2as-secondary" rel="noopener noreferrer">R2AS</a>
                         sans aucune garantie. <span class="font-semibold">Aucun cookie</span>.
-                        Logiciel libre, <a href="https://github.com/cleming/r2as-vote" class="text-r2as-primary hover:text-r2as-secondary underline">code source et informations</a>.
+                        Logiciel libre, <a href="https://github.com/cleming/r2as-vote" class="text-r2as-primary hover:text-r2as-secondary underline" rel="noopener noreferrer">code source et informations</a>.
                     </p>
                 </div>
             </footer>

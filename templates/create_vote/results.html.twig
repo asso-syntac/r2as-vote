@@ -6,11 +6,11 @@
 
 <div class="max-w-6xl mx-auto">
     <!-- Breadcrumb -->
-    <div class="mb-6">
+    <nav aria-label="Fil d’ariane" class="mb-6">
         <a href="/param-vote/{{uuid}}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
             ← {{ event.name }}
         </a>
-    </div>
+    </nav>
 
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
@@ -132,8 +132,8 @@
 
         {% set newArray = [] %}
         {% for r in responsesType1 %}
-            {% if r.user.uuid not in newArray %}
-                {% set newArray = newArray|merge([r.user.uuid]) %}
+            {% if r.user_uuid is not null and r.user_uuid not in newArray %}
+                {% set newArray = newArray|merge([r.user_uuid]) %}
             {% endif %}
         {% endfor %}
 
@@ -146,17 +146,17 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {% set displayedUsers = [] %}
             {% for r in responsesType1 %}
-                {% if r.user.uuid not in displayedUsers %}
+                {% if r.user_uuid is not null and r.user_uuid not in displayedUsers %}
                     <div class="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <svg class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div class="min-w-0 flex-1">
-                            <p class="text-sm font-medium text-gray-900 truncate">{{ r.user.name }}</p>
-                            <p class="text-xs text-gray-600 truncate">{{ r.user.mail }}</p>
+                            <p class="text-sm font-medium text-gray-900 truncate">{{ r.user_name ?? 'Votant supprimé' }}</p>
+                            <p class="text-xs text-gray-600 truncate">{{ r.user_mail ?? '—' }}</p>
                         </div>
                     </div>
-                    {% set displayedUsers = displayedUsers|merge([r.user.uuid]) %}
+                    {% set displayedUsers = displayedUsers|merge([r.user_uuid]) %}
                 {% endif %}
             {% endfor %}
         </div>

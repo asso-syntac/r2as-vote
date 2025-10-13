@@ -58,8 +58,9 @@ class VoteController extends AbstractController
         ]);
     }
 
-    #[Route('/vote/{uuid}/1/{proposalid}/{status}', name: 'submitvotetype1')]
+    #[Route('/vote/{uuid}/1/{proposalid}/{status}', name: 'submitvotetype1', methods: ['POST'])]
     public function submitvotetype1(
+        Request $request,
         string $uuid,
         int $proposalid,
         string $status,
@@ -68,6 +69,21 @@ class VoteController extends AbstractController
         ResponseType1Repository $responseType1Repository,
         EntityManagerInterface $entityManager
     ): Response {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('vote_type1' . $uuid . '-' . $proposalid . '-' . $status, $token)) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        // Simple rate limit: 1 vote action per second per user session
+        $session = $request->getSession();
+        $rateKey = 'rate.vote.' . $uuid;
+        $now = time();
+        $last = $session->get($rateKey, 0);
+        if ($now - $last < 1) {
+            $this->addFlash('error', 'Veuillez patienter une seconde avant de voter de nouveau.');
+            return $this->redirectToRoute('vote', ['uuid' => $uuid]);
+        }
+        $session->set($rateKey, $now);
         $user = $usersRepository->findOneBy(['uuid' => $uuid]);
         if (!$user) {
             throw $this->createNotFoundException('User not found');
