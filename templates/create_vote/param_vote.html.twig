@@ -20,19 +20,25 @@
 
             <div>
                 {% if event.state %}
-                    <a href="/disable/{{ uuid }}" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Désactiver
-                    </a>
+                    <form method="post" action="{{ path('disablevote', { uuid: uuid }) }}" class="inline" onsubmit="return confirm('Confirmer la désactivation du vote ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('disable_vote' ~ uuid) }}">
+                        <button type="submit" aria-label="Désactiver le vote {{ event.name }}" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Désactiver
+                        </button>
+                    </form>
                 {% else %}
-                    <a href="/enable/{{ uuid }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Activer
-                    </a>
+                    <form method="post" action="{{ path('enablevote', { uuid: uuid }) }}" class="inline" onsubmit="return confirm('Confirmer l\'activation du vote ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('enable_vote' ~ uuid) }}">
+                        <button type="submit" aria-label="Activer le vote {{ event.name }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Activer
+                        </button>
+                    </form>
                 {% endif %}
             </div>
         </div>
@@ -50,7 +56,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter un votant</h3>
                 <p class="text-gray-600 text-sm mb-4">Ajoutez un participant individuel au vote</p>
-                <a href="/param-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200">
+                <a href="/param-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Ajouter
                 </a>
             </div>
@@ -66,7 +72,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Import en masse</h3>
                 <p class="text-gray-600 text-sm mb-4">Importez plusieurs votants via CSV</p>
-                <a href="/param-users-batch/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200">
+                <a href="/param-users-batch/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Importer
                 </a>
             </div>
@@ -82,7 +88,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Gérer les votants</h3>
                 <p class="text-gray-600 text-sm mb-4">Consultez et modifiez la liste des votants</p>
-                <a href="/list-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-200">
+                <a href="/list-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Gérer
                 </a>
             </div>
@@ -98,7 +104,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter une proposition</h3>
                 <p class="text-gray-600 text-sm mb-4">Créez une nouvelle question à voter</p>
-                <a href="/param-proposals/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200">
+                <a href="/param-proposals/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Ajouter
                 </a>
             </div>
@@ -114,7 +120,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Consulter les résultats</h3>
                 <p class="text-gray-600 text-sm mb-4">Visualisez les résultats du vote en temps réel</p>
-                <a href="/results/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-r2as-primary hover:bg-r2as-secondary text-white font-medium rounded-lg transition duration-200">
+                <a href="/results/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-r2as-primary hover:bg-r2as-secondary text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Voir les résultats
                 </a>
             </div>

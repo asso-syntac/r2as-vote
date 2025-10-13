@@ -13,14 +13,14 @@
 
         <div class="flex items-center gap-4 flex-wrap">
             <div class="inline-flex items-center px-4 py-2 bg-r2as-primary bg-opacity-10 text-r2as-primary rounded-lg">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span class="font-semibold">Votre vote : {{ factor }} voix</span>
             </div>
 
             <div class="inline-flex items-center px-4 py-2 bg-yellow-50 text-yellow-800 rounded-lg">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
                 <span class="text-sm">Vote définitif - Non modifiable</span>
@@ -29,7 +29,7 @@
 
         <div class="mt-4 p-4 bg-blue-50 rounded-lg">
             <div class="flex">
-                <svg class="w-5 h-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <p class="text-sm text-blue-800">
@@ -43,7 +43,7 @@
     {% if proposals is not null %}
         <div class="space-y-6">
             {% for p in proposals %}
-                <div class="bg-white rounded-lg shadow-md overflow-hidden {% if p.id in exist %}border-2 border-green-500{% endif %}">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden {% if p.id in exist %}border-2 border-green-500{% endif %}" role="region" aria-labelledby="prop-{{ p.id }}-title">
                     <div class="p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex-1">
@@ -51,14 +51,14 @@
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-r2as-primary text-white font-bold text-sm mr-3">
                                         {{ loop.index }}
                                     </span>
-                                    <h3 class="text-xl font-bold text-gray-900">Proposition n°{{ loop.index }}</h3>
+                                    <h3 id="prop-{{ p.id }}-title" class="text-xl font-bold text-gray-900">Proposition n°{{ loop.index }}</h3>
                                 </div>
                                 <p class="text-gray-700 ml-11">{{ p.name }}</p>
                             </div>
 
                             {% if p.id in exist %}
                                 <div class="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                     </svg>
                                     Voté
@@ -70,35 +70,47 @@
                             <div class="mt-6 pt-6 border-t border-gray-200">
                                 <p class="text-sm text-gray-600 mb-4">Sélectionnez votre réponse :</p>
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <a href="/vote/{{uuid}}/1/{{ p.id }}/positive"
-                                       class="flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                                        </svg>
-                                        Pour
-                                    </a>
+                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'positive' }) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('vote_type1' ~ uuid ~ '-' ~ p.id ~ '-positive') }}">
+                                        <button type="submit"
+                                                aria-label="Voter POUR : {{ p.name }}"
+                                                class="w-full flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                                            </svg>
+                                            Pour
+                                        </button>
+                                    </form>
 
-                                    <a href="/vote/{{uuid}}/1/{{ p.id }}/negative"
-                                       class="flex items-center justify-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/>
-                                        </svg>
-                                        Contre
-                                    </a>
+                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'negative' }) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('vote_type1' ~ uuid ~ '-' ~ p.id ~ '-negative') }}">
+                                        <button type="submit"
+                                                aria-label="Voter CONTRE : {{ p.name }}"
+                                                class="w-full flex items-center justify-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/>
+                                            </svg>
+                                            Contre
+                                        </button>
+                                    </form>
 
-                                    <a href="/vote/{{uuid}}/1/{{ p.id }}/abstention"
-                                       class="flex items-center justify-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                                        </svg>
-                                        Abstention
-                                    </a>
+                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'abstention' }) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('vote_type1' ~ uuid ~ '-' ~ p.id ~ '-abstention') }}">
+                                        <button type="submit"
+                                                aria-label="S'abstenir : {{ p.name }}"
+                                                class="w-full flex items-center justify-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                            </svg>
+                                            Abstention
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         {% else %}
                             <div class="mt-6 pt-6 border-t border-gray-200">
                                 <div class="flex items-center justify-center p-4 bg-green-50 rounded-lg">
-                                    <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                     <span class="font-semibold text-green-800">Vous avez déjà voté pour cette proposition</span>

@@ -132,12 +132,27 @@ class CreateVoteController extends AbstractController
         ]);
     }
 
-    #[Route('/disable/{uuid}', name: 'disablevote')]
+    #[Route('/disable/{uuid}', name: 'disablevote', methods: ['POST'])]
     public function disablevote(
+        Request $request,
         string $uuid,
         EventsRepository $eventsRepository,
         EntityManagerInterface $entityManager
     ): Response {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('disable_vote' . $uuid, $token)) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+        // Simple rate limit: 1 admin action per second per session (by event)
+        $session = $request->getSession();
+        $rateKey = 'rate.disable.' . $uuid;
+        $now = time();
+        $last = $session->get($rateKey, 0);
+        if ($now - $last < 1) {
+            $this->addFlash('error', 'Veuillez patienter une seconde avant de réessayer.');
+            return $this->redirectToRoute('param_vote', ['uuid' => $uuid]);
+        }
+        $session->set($rateKey, $now);
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
             throw $this->createNotFoundException('Event not found');
@@ -152,12 +167,27 @@ class CreateVoteController extends AbstractController
         return $this->redirectToRoute('param_vote', ['uuid' => $uuid]);
     }
 
-    #[Route('/enable/{uuid}', name: 'enablevote')]
+    #[Route('/enable/{uuid}', name: 'enablevote', methods: ['POST'])]
     public function enablevote(
+        Request $request,
         string $uuid,
         EventsRepository $eventsRepository,
         EntityManagerInterface $entityManager
     ): Response {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('enable_vote' . $uuid, $token)) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+        // Simple rate limit: 1 admin action per second per session (by event)
+        $session = $request->getSession();
+        $rateKey = 'rate.enable.' . $uuid;
+        $now = time();
+        $last = $session->get($rateKey, 0);
+        if ($now - $last < 1) {
+            $this->addFlash('error', 'Veuillez patienter une seconde avant de réessayer.');
+            return $this->redirectToRoute('param_vote', ['uuid' => $uuid]);
+        }
+        $session->set($rateKey, $now);
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
             throw $this->createNotFoundException('Event not found');
@@ -189,13 +219,28 @@ class CreateVoteController extends AbstractController
 
         $response = [];
         foreach ($responsesType1 as $r){
-            $response[] = array(
+            $userUuid = null; $userName = null; $userMail = null; $userId = null;
+            try {
+                $user = $r->getUserId();
+                if ($user) {
+                    $userId = $user->getId();
+                    $userUuid = $user->getUuid();
+                    $userName = $user->getName();
+                    $userMail = $user->getMail();
+                }
+            } catch (\Doctrine\ORM\EntityNotFoundException $e) {
+                // utilisateur supprimé: on laisse les champs à null
+            }
+            $response[] = [
                 'proposal' => $r->getProposalId()->getId(),
                 'positive' => $r->getpositive(),
                 'negative' => $r->getnegative(),
                 'abstention' => $r->getabstention(),
-                'user' => $r->getUserId(),
-            );
+                'user_id' => $userId,
+                'user_uuid' => $userUuid,
+                'user_name' => $userName,
+                'user_mail' => $userMail,
+            ];
         }
 
         return $this->render('create_vote/results.html.twig', [
@@ -206,14 +251,30 @@ class CreateVoteController extends AbstractController
         ]);
     }
 
-    #[Route('/delete-user/{uuid}/{userid}', name: 'deleteuser')]
+    #[Route('/delete-user/{uuid}/{userid}', name: 'deleteuser', methods: ['POST'])]
     public function deleteuser(
+        Request $request,
         string $uuid,
         int $userid,
         EventsRepository $eventsRepository,
         UsersRepository $usersRepository,
+        \App\Repository\ResponseType1Repository $responseType1Repository,
         EntityManagerInterface $entityManager
     ): Response {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete_user' . $userid, $token)) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+        // Simple rate limit: 1 delete per second per session (by user ID)
+        $session = $request->getSession();
+        $rateKey = 'rate.delete_user.' . $userid;
+        $now = time();
+        $last = $session->get($rateKey, 0);
+        if ($now - $last < 1) {
+            $this->addFlash('error', 'Veuillez patienter une seconde avant de réessayer.');
+            return $this->redirectToRoute('list_users', ['uuid' => $uuid]);
+        }
+        $session->set($rateKey, $now);
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
             throw $this->createNotFoundException('Event not found');
@@ -227,22 +288,44 @@ class CreateVoteController extends AbstractController
         $userevent = $user->getEventId()->getId();
         $eventid = $event->getId();
         if ($userevent == $eventid){
+            // Supprimer d'abord les votes associés à cet utilisateur
+            $userVotes = $responseType1Repository->findBy(['user_id' => $user]);
+            foreach ($userVotes as $v) {
+                $entityManager->remove($v);
+            }
+            // Puis supprimer l'utilisateur
             $entityManager->remove($user);
             $entityManager->flush();
-            $this->addFlash('success', 'Le votant a été supprimé.');
+            $this->addFlash('success', 'Le votant et ses votes associés ont été supprimés.');
         }
 
         return $this->redirectToRoute('param_users', ['uuid' => $uuid]);
     }
 
-    #[Route('/delete-proposal/{uuid}/{proposalid}', name: 'deleteproposal')]
+    #[Route('/delete-proposal/{uuid}/{proposalid}', name: 'deleteproposal', methods: ['POST'])]
     public function deleteproposal(
+        Request $request,
         string $uuid,
         int $proposalid,
         EventsRepository $eventsRepository,
         ProposalRepository $proposalRepository,
+        ResponseType1Repository $responseType1Repository,
         EntityManagerInterface $entityManager
     ): Response {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete_proposal' . $proposalid, $token)) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+        // Simple rate limit: 1 delete per second per session (by proposal ID)
+        $session = $request->getSession();
+        $rateKey = 'rate.delete_proposal.' . $proposalid;
+        $now = time();
+        $last = $session->get($rateKey, 0);
+        if ($now - $last < 1) {
+            $this->addFlash('error', 'Veuillez patienter une seconde avant de réessayer.');
+            return $this->redirectToRoute('param_proposals', ['uuid' => $uuid]);
+        }
+        $session->set($rateKey, $now);
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
             throw $this->createNotFoundException('Event not found');
@@ -256,9 +339,15 @@ class CreateVoteController extends AbstractController
         $proposalevent = $proposal->getEventId()->getId();
         $eventid = $event->getId();
         if ($proposalevent == $eventid){
+            // Supprimer d'abord les votes rattachés à cette proposition
+            $proposalVotes = $responseType1Repository->findBy(['proposal_id' => $proposal]);
+            foreach ($proposalVotes as $v) {
+                $entityManager->remove($v);
+            }
+            // Puis supprimer la proposition
             $entityManager->remove($proposal);
             $entityManager->flush();
-            $this->addFlash('success', 'La proposition a été supprimée.');
+            $this->addFlash('success', 'La proposition et ses votes associés ont été supprimés.');
         }
 
         return $this->redirectToRoute('param_proposals', ['uuid' => $uuid]);
@@ -419,4 +508,3 @@ class CreateVoteController extends AbstractController
         ]);
     }
 }
-
