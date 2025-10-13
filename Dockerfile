@@ -18,12 +18,16 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY composer.json ./
+COPY composer.json composer.lock* ./
+
+RUN composer install --no-interaction --no-dev --optimize-autoloader --no-scripts
 
 COPY . .
+
+RUN composer run-script --no-interaction post-install-cmd || true
 
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 9000
 
-CMD ["sh", "-c", "composer update --no-interaction --optimize-autoloader && php-fpm"]
+CMD ["php-fpm"]
