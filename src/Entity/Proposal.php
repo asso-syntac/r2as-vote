@@ -7,37 +7,25 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ProposalRepository::class)
- */
+#[ORM\Entity(repositoryClass: ProposalRepository::class)]
 class Proposal
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $type;
 
-    /**
-     * @ORM\Column(type="string", length=512)
-     */
+    #[ORM\Column(type: 'string', length: 512)]
     private $name;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Events::class, inversedBy="proposals")
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\ManyToOne(targetEntity: Events::class, inversedBy: 'proposals')]
+    #[ORM\JoinColumn(nullable: false)]
     private $event_id;
 
-    /**
-     * @ORM\OneToMany(targetEntity=ResponseType1::class, mappedBy="proposal_id", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: ResponseType1::class, mappedBy: 'proposal_id', orphanRemoval: true)]
     private $responseType1s;
 
     public function __construct()

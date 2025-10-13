@@ -5,49 +5,33 @@ namespace App\Entity;
 use App\Repository\ResponseType1Repository;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ResponseType1Repository::class)
- */
+#[ORM\Entity(repositoryClass: ResponseType1Repository::class)]
 class ResponseType1
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Events::class, inversedBy="responseType1s")
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\ManyToOne(targetEntity: Events::class, inversedBy: 'responseType1s')]
+    #[ORM\JoinColumn(nullable: false)]
     private $event_id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Users::class)
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\ManyToOne(targetEntity: Users::class)]
+    #[ORM\JoinColumn(nullable: false)]
     private $user_id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Proposal::class, inversedBy="responseType1s")
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\ManyToOne(targetEntity: Proposal::class, inversedBy: 'responseType1s')]
+    #[ORM\JoinColumn(nullable: false)]
     private $proposal_id;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $positive;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $negative;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: 'integer', nullable: true)]
     private $abstention;
 
     public function getId(): ?int
