@@ -13,7 +13,7 @@
         <p class="text-xl text-gray-600 mb-8">
             Un outil simple et gratuit pour organiser vos votes électroniques sans inscription
         </p>
-        <a href="/new-vote" aria-label="Créer un nouveau vote" class="inline-flex items-center px-8 py-3 bg-r2as-primary hover:bg-r2as-secondary text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
+        <a href="{{ path('create_vote') }}" aria-label="Créer un nouveau vote" class="inline-flex items-center px-8 py-3 bg-r2as-primary hover:bg-r2as-secondary text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -36,7 +36,7 @@
                 <div class="ml-4">
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Créez votre vote</h3>
                     <p class="text-gray-600">
-                        Cliquez sur <a href="/new-vote" class="text-r2as-primary hover:text-r2as-secondary underline font-semibold">Créer un vote</a>,
+                        Cliquez sur <a href="{{ path('create_vote') }}" class="text-r2as-primary hover:text-r2as-secondary underline font-semibold">Créer un vote</a>,
                         renseignez le nom de votre campagne, sa description et votre adresse mail pour recevoir le lien d'administration.
                     </p>
                 </div>
@@ -98,7 +98,7 @@
 
     <!-- CTA -->
     <div class="mt-8 text-center">
-        <a href="/new-vote" aria-label="Commencer la création d'un vote" class="inline-flex items-center px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
+        <a href="{{ path('create_vote') }}" aria-label="Commencer la création d'un vote" class="inline-flex items-center px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>

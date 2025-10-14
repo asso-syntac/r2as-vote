@@ -1,3 +1,17 @@
+when@dev:
+    sentry:
+        dsn: '%env(SENTRY_DSN)%'
+        options:
+            traces_sample_rate: 1.0
+            profiles_sample_rate: 1.0
+            send_default_pii: true
+            attach_stacktrace: true
+            enable_logs: true
+            # ignore legacy fatal errors sometimes thrown by PHP built-in server
+            ignore_exceptions:
+                - 'Symfony\Component\ErrorHandler\Error\FatalError'
+                - 'Symfony\Component\Debug\Exception\FatalErrorException'
+
 when@prod:
     sentry:
         dsn: '%env(SENTRY_DSN)%'
@@ -6,7 +20,8 @@ when@prod:
             profiles_sample_rate: 1.0
             # Add request headers, cookies, IP address and the authenticated user
             # see https://docs.sentry.io/platforms/php/data-management/data-collected/ for more info
-            # send_default_pii: true
+            send_default_pii: true
+            enable_logs: true
             ignore_exceptions:
                 - 'Symfony\Component\ErrorHandler\Error\FatalError'
                 - 'Symfony\Component\Debug\Exception\FatalErrorException'

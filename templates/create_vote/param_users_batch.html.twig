@@ -7,7 +7,7 @@
 <div class="max-w-4xl mx-auto">
     <!-- Breadcrumb -->
     <nav aria-label="Fil d’ariane" class="mb-6">
-        <a href="/param-vote/{{uuid}}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
+        <a href="{{ path('param_vote', { uuid: uuid }) }}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
             ← {{ event.name }}
         </a>
     </nav>
@@ -84,7 +84,7 @@ Pierre Martin,pierre@example.com,3</div>
         </div>
 
         <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-            <a href="/param-vote/{{uuid}}" class="text-gray-600 hover:text-gray-900 font-medium">
+            <a href="{{ path('param_vote', { uuid: uuid }) }}" class="text-gray-600 hover:text-gray-900 font-medium">
                 ← Annuler
             </a>
             {{ form_widget(form.save, {'label': 'Importer les votants', 'attr': {'class': 'inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition duration-200 transform hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none'}}) }}

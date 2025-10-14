@@ -14,6 +14,10 @@ use App\Repository\ResponseType1Repository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
+use Sentry\State\HubInterface;
+use Sentry\State\Scope;
+use Symfony\Component\Mercure\HubInterface as MercureHubInterface;
+use Symfony\Component\Mercure\Update;
 
 class VoteController extends AbstractController
 {
@@ -21,7 +25,8 @@ class VoteController extends AbstractController
     public function index(
         string $uuid,
         UsersRepository $usersRepository,
-        ResponseType1Repository $responseType1Repository
+        ResponseType1Repository $responseType1Repository,
+        HubInterface $sentryHub
     ): Response {
         $user = $usersRepository->findOneBy(['uuid' => $uuid]);
 
@@ -31,6 +36,19 @@ class VoteController extends AbstractController
 
         $factor = $user->getFactor();
         $event = $user->getEventId();
+        // Identify voter in Sentry context
+        $sentryHub->configureScope(function (Scope $scope) use ($user) {
+            $scope->setUser([
+                'id' => $user->getUuid(),
+                'email' => $user->getMail(),
+                'username' => $user->getName(),
+            ]);
+            $scope->setTag('role', 'voter');
+        });
+        // Tag event UUID for correlation
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
         $proposals = $event->getProposals();
         $responsesType1 = $responseType1Repository->findBy(['user_id' => $user]);
 
@@ -67,8 +85,14 @@ class VoteController extends AbstractController
         UsersRepository $usersRepository,
         ProposalRepository $proposalRepository,
         ResponseType1Repository $responseType1Repository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub,
+        MercureHubInterface $mercureHub
     ): Response {
+        $allowed = ['positive', 'negative', 'abstention'];
+        if (!in_array($status, $allowed, true)) {
+            throw $this->createNotFoundException('Invalid status');
+        }
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('vote_type1' . $uuid . '-' . $proposalid . '-' . $status, $token)) {
             throw $this->createAccessDeniedException('Jeton CSRF invalide.');
@@ -88,6 +112,15 @@ class VoteController extends AbstractController
         if (!$user) {
             throw $this->createNotFoundException('User not found');
         }
+        // Identify voter in Sentry context for this action
+        $sentryHub->configureScope(function (Scope $scope) use ($user) {
+            $scope->setUser([
+                'id' => $user->getUuid(),
+                'email' => $user->getMail(),
+                'username' => $user->getName(),
+            ]);
+            $scope->setTag('role', 'voter');
+        });
 
         $proposal = $proposalRepository->findOneBy(['id' => $proposalid]);
         if (!$proposal) {
@@ -96,6 +129,19 @@ class VoteController extends AbstractController
 
         $factor = $user->getFactor();
         $event = $user->getEventId();
+        if ($event->getState() === false) {
+            $this->addFlash('error', 'Le vote est désactivé.');
+            return $this->redirectToRoute('vote', ['uuid' => $uuid]);
+        }
+        if ($proposal->getEventId()->getId() !== $event->getId()) {
+            throw $this->createNotFoundException('Proposal not in user event');
+        }
+        // Tag event and proposal for filtering
+        $sentryHub->configureScope(function (Scope $scope) use ($event, $proposal, $status) {
+            $scope->setTag('event_uuid', $event->getUuid());
+            $scope->setTag('proposal_id', (string) $proposal->getId());
+            $scope->setTag('vote_status', $status);
+        });
 
         $vote = new ResponseType1();
         $vote->setEventId($event);
@@ -122,6 +168,16 @@ class VoteController extends AbstractController
             $entityManager->persist($vote);
             $entityManager->flush();
             $this->addFlash('success', 'Votre vote a été enregistré avec succès.');
+            // Publish Mercure update (JWT handled by MercureBundle)
+            $topic = sprintf('https://r2as.example/topics/event/%s', $event->getUuid());
+            $mercureHub->publish(new Update($topic, json_encode([
+                'type' => 'vote.cast',
+                'event_uuid' => $event->getUuid(),
+                'proposal_id' => $proposal->getId(),
+                'status' => $status,
+                'factor' => $factor,
+                'timestamp' => time(),
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)));
         }
 
         return $this->redirectToRoute('vote', ['uuid' => $uuid, 'factor' => $factor]);

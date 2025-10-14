@@ -7,7 +7,7 @@
 <div class="max-w-6xl mx-auto">
     <!-- Breadcrumb -->
     <nav aria-label="Fil d’ariane" class="mb-6">
-        <a href="/param-vote/{{uuid}}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
+        <a href="{{ path('param_vote', { uuid: uuid }) }}" class="text-r2as-primary hover:text-r2as-secondary font-medium">
             ← {{ event.name }}
         </a>
     </nav>
@@ -42,7 +42,7 @@
 
         {% set total = positive + negative + abstention %}
 
-        <div class="bg-white rounded-lg shadow-lg p-6">
+        <div id="proposal-{{ p.id }}" class="bg-white rounded-lg shadow-lg p-6" data-proposal-id="{{ p.id }}">
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ p.name }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -51,7 +51,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-green-900 mb-1">Pour</p>
-                            <p class="text-3xl font-bold text-green-700">{{ positive }}</p>
+                            <p class="text-3xl font-bold text-green-700"><span id="pos-count-{{ p.id }}">{{ positive }}</span></p>
                         </div>
                         <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
@@ -60,10 +60,10 @@
                     {% if total > 0 %}
                     <div class="mt-3">
                         <div class="flex items-center justify-between text-xs text-green-700 mb-1">
-                            <span>{{ ((positive / total) * 100)|round(1) }}%</span>
+                            <span id="pos-pct-{{ p.id }}">{{ ((positive / total) * 100)|round(1) }}%</span>
                         </div>
                         <div class="w-full bg-green-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ ((positive / total) * 100)|round(1) }}%"></div>
+                            <div id="pos-bar-{{ p.id }}" class="bg-green-600 h-2 rounded-full" style="width: {{ ((positive / total) * 100)|round(1) }}%"></div>
                         </div>
                     </div>
                     {% endif %}
@@ -74,7 +74,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-red-900 mb-1">Contre</p>
-                            <p class="text-3xl font-bold text-red-700">{{ negative }}</p>
+                            <p class="text-3xl font-bold text-red-700"><span id="neg-count-{{ p.id }}">{{ negative }}</span></p>
                         </div>
                         <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/>
@@ -83,10 +83,10 @@
                     {% if total > 0 %}
                     <div class="mt-3">
                         <div class="flex items-center justify-between text-xs text-red-700 mb-1">
-                            <span>{{ ((negative / total) * 100)|round(1) }}%</span>
+                            <span id="neg-pct-{{ p.id }}">{{ ((negative / total) * 100)|round(1) }}%</span>
                         </div>
                         <div class="w-full bg-red-200 rounded-full h-2">
-                            <div class="bg-red-600 h-2 rounded-full" style="width: {{ ((negative / total) * 100)|round(1) }}%"></div>
+                            <div id="neg-bar-{{ p.id }}" class="bg-red-600 h-2 rounded-full" style="width: {{ ((negative / total) * 100)|round(1) }}%"></div>
                         </div>
                     </div>
                     {% endif %}
@@ -97,7 +97,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-900 mb-1">Abstention</p>
-                            <p class="text-3xl font-bold text-gray-700">{{ abstention }}</p>
+                            <p class="text-3xl font-bold text-gray-700"><span id="abs-count-{{ p.id }}">{{ abstention }}</span></p>
                         </div>
                         <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
@@ -106,10 +106,10 @@
                     {% if total > 0 %}
                     <div class="mt-3">
                         <div class="flex items-center justify-between text-xs text-gray-700 mb-1">
-                            <span>{{ ((abstention / total) * 100)|round(1) }}%</span>
+                            <span id="abs-pct-{{ p.id }}">{{ ((abstention / total) * 100)|round(1) }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-gray-500 h-2 rounded-full" style="width: {{ ((abstention / total) * 100)|round(1) }}%"></div>
+                            <div id="abs-bar-{{ p.id }}" class="bg-gray-500 h-2 rounded-full" style="width: {{ ((abstention / total) * 100)|round(1) }}%"></div>
                         </div>
                     </div>
                     {% endif %}
@@ -117,7 +117,7 @@
             </div>
 
             <div class="text-center text-sm text-gray-600 border-t pt-4">
-                Total des voix : <span class="font-semibold text-gray-900">{{ total }}</span>
+                Total des voix : <span id="total-count-{{ p.id }}" class="font-semibold text-gray-900">{{ total }}</span>
             </div>
         </div>
         {% endfor %}
@@ -164,3 +164,67 @@
 </div>
 
 {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            const hubUrl = '{{ mercure_public_url|e('js') }}';
+            const topic = 'https://r2as.example/topics/event/{{ uuid }}';
+            if (!hubUrl) return;
+            function toNumber(el) {
+                return parseInt((el?.textContent || '0').replace(/[^0-9-]/g, ''), 10) || 0;
+            }
+            function setPct(el, value) {
+                if (!el) return;
+                el.textContent = `${value.toFixed(1)}%`;
+            }
+            function setBar(el, pct) {
+                if (!el) return;
+                el.style.width = `${pct.toFixed(1)}%`;
+            }
+            try {
+                const url = new URL(hubUrl);
+                url.searchParams.append('topic', topic);
+                const es = new EventSource(url.toString());
+                es.onmessage = function (e) {
+                    let data;
+                    try { data = JSON.parse(e.data); } catch { return; }
+                    if (data?.type !== 'vote.cast') return;
+                    const pid = String(data.proposal_id);
+                    const delta = Number(data.factor || 1);
+                    const container = document.getElementById(`proposal-${pid}`);
+                    if (!container) return;
+                    const posEl = document.getElementById(`pos-count-${pid}`);
+                    const negEl = document.getElementById(`neg-count-${pid}`);
+                    const absEl = document.getElementById(`abs-count-${pid}`);
+                    let pos = toNumber(posEl);
+                    let neg = toNumber(negEl);
+                    let abs = toNumber(absEl);
+                    switch (data.status) {
+                        case 'positive': pos += delta; break;
+                        case 'negative': neg += delta; break;
+                        case 'abstention': abs += delta; break;
+                        default: return;
+                    }
+                    const total = pos + neg + abs;
+                    if (posEl) posEl.textContent = String(pos);
+                    if (negEl) negEl.textContent = String(neg);
+                    if (absEl) absEl.textContent = String(abs);
+                    const totalEl = document.getElementById(`total-count-${pid}`);
+                    if (totalEl) totalEl.textContent = String(total);
+                    // Update percentages and bars
+                    const posPct = total > 0 ? (pos / total) * 100 : 0;
+                    const negPct = total > 0 ? (neg / total) * 100 : 0;
+                    const absPct = total > 0 ? (abs / total) * 100 : 0;
+                    setPct(document.getElementById(`pos-pct-${pid}`), posPct);
+                    setPct(document.getElementById(`neg-pct-${pid}`), negPct);
+                    setPct(document.getElementById(`abs-pct-${pid}`), absPct);
+                    setBar(document.getElementById(`pos-bar-${pid}`), posPct);
+                    setBar(document.getElementById(`neg-bar-${pid}`), negPct);
+                    setBar(document.getElementById(`abs-bar-${pid}`), absPct);
+                };
+            } catch (_e) {}
+        })();
+    </script>
+    {% endblock %}

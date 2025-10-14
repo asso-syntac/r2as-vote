@@ -11,36 +11,32 @@ use App\Repository\ProposalRepository;
 use App\Repository\UsersRepository;
 use App\Repository\ResponseType1Repository;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Routing\Attribute\Route;
 use League\Csv\Reader;
-use League\Csv\Statement;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Form\EventType;
+use App\Form\ProposalType;
+use App\Form\UserType;
+use App\Form\UsersBatchType;
+use App\Service\NotificationMailer;
+use Sentry\State\HubInterface;
+use Sentry\State\Scope;
 
 class CreateVoteController extends AbstractController
 {
     #[Route('/new-vote', name: 'create_vote')]
-    public function index(Request $request, MailerInterface $mailer, EntityManagerInterface $entityManager): Response
+    public function index(Request $request, NotificationMailer $notifier, EntityManagerInterface $entityManager, HubInterface $sentryHub): Response
     {
         $uuid = uuid_create(UUID_TYPE_RANDOM);
         $event = new Events();
         $event->setUuid($uuid);
         $event->setState(true);
-        $form = $this->createFormBuilder($event)
-            ->add('name')
-            ->add('description')
-            ->add('mail', EmailType::class)
-            ->add('save', SubmitType::class, ['label' => 'Valider'])
-            ->getForm();
+        $form = $this->createForm(EventType::class, $event)
+            ->add('save', SubmitType::class, ['label' => 'Valider']);
         
         $form->handleRequest($request);
 
@@ -51,17 +47,16 @@ class CreateVoteController extends AbstractController
             $entityManager->flush();
 
             $mail = $form->get('mail')->getData();
-
-            $email = (new TemplatedEmail())
-                ->from('noemie.ployet@r2as.org')
-                ->to($mail)
-                ->subject('Admin : nouveau vote créé')
-                ->htmlTemplate('emails/new_vote.html.twig')
-                ->context([
-                    'uuid' => $uuid,
+            $sentryHub->configureScope(function (Scope $scope) use ($event, $mail) {
+                $scope->setUser([
+                    'id' => $event->getUuid(),
+                    'email' => $mail,
+                    'username' => $event->getName(),
                 ]);
-
-            $mailer->send($email);
+                $scope->setTag('role', 'organizer');
+                $scope->setTag('event_uuid', $event->getUuid());
+            });
+            $notifier->sendNewVote($mail, $uuid);
 
             $this->addFlash('success', 'Votre vote a été créé avec succès ! Un email de confirmation a été envoyé.');
 
@@ -75,13 +70,18 @@ class CreateVoteController extends AbstractController
     }
 
     #[Route('/param-vote/{uuid}', name: 'param_vote')]
-    public function paramvote(string $uuid, EventsRepository $eventsRepository): Response
+    public function paramvote(string $uuid, EventsRepository $eventsRepository, HubInterface $sentryHub): Response
     {
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         return $this->render('create_vote/param_vote.html.twig', [
             'uuid' => $uuid,
@@ -95,21 +95,26 @@ class CreateVoteController extends AbstractController
         string $uuid,
         EventsRepository $eventsRepository,
         ProposalRepository $proposalRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $proposalss = $proposalRepository->findBy(['event_id' => $event]);
         $proposals = new Proposal();
-        $proposals->setType("1");
+        $proposals->setType(1);
         $proposals->setEventId($event);
-        $form = $this->createFormBuilder($proposals)
-            ->add('name')
-            ->add('save', SubmitType::class, ['label' => 'Valider'])
-            ->getForm();
+        $form = $this->createForm(ProposalType::class, $proposals)
+            ->add('save', SubmitType::class, ['label' => 'Valider']);
 
         $form->handleRequest($request);
 
@@ -137,7 +142,8 @@ class CreateVoteController extends AbstractController
         Request $request,
         string $uuid,
         EventsRepository $eventsRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('disable_vote' . $uuid, $token)) {
@@ -153,10 +159,16 @@ class CreateVoteController extends AbstractController
             return $this->redirectToRoute('param_vote', ['uuid' => $uuid]);
         }
         $session->set($rateKey, $now);
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $event->setState(false);
         $entityManager->persist($event);
@@ -172,7 +184,8 @@ class CreateVoteController extends AbstractController
         Request $request,
         string $uuid,
         EventsRepository $eventsRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('enable_vote' . $uuid, $token)) {
@@ -188,10 +201,16 @@ class CreateVoteController extends AbstractController
             return $this->redirectToRoute('param_vote', ['uuid' => $uuid]);
         }
         $session->set($rateKey, $now);
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $event->setState(true);
         $entityManager->persist($event);
@@ -207,12 +226,19 @@ class CreateVoteController extends AbstractController
         string $uuid,
         EventsRepository $eventsRepository,
         ProposalRepository $proposalRepository,
-        ResponseType1Repository $responseType1Repository
+        ResponseType1Repository $responseType1Repository,
+        HubInterface $sentryHub
     ): Response {
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $proposals = $proposalRepository->findBy(['event_id' => $event]);
         $responsesType1 = $responseType1Repository->findBy(['event_id' => $event]);
@@ -258,8 +284,9 @@ class CreateVoteController extends AbstractController
         int $userid,
         EventsRepository $eventsRepository,
         UsersRepository $usersRepository,
-        \App\Repository\ResponseType1Repository $responseType1Repository,
-        EntityManagerInterface $entityManager
+        ResponseType1Repository $responseType1Repository,
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('delete_user' . $userid, $token)) {
@@ -275,10 +302,16 @@ class CreateVoteController extends AbstractController
             return $this->redirectToRoute('list_users', ['uuid' => $uuid]);
         }
         $session->set($rateKey, $now);
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $user = $usersRepository->findOneBy(['id' => $userid]);
         if (!$user) {
@@ -310,7 +343,8 @@ class CreateVoteController extends AbstractController
         EventsRepository $eventsRepository,
         ProposalRepository $proposalRepository,
         ResponseType1Repository $responseType1Repository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('delete_proposal' . $proposalid, $token)) {
@@ -326,10 +360,16 @@ class CreateVoteController extends AbstractController
             return $this->redirectToRoute('param_proposals', ['uuid' => $uuid]);
         }
         $session->set($rateKey, $now);
-        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
-        if (!$event) {
-            throw $this->createNotFoundException('Event not found');
-        }
+        $event = $this->getEventOr404($eventsRepository, $uuid);
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $proposal = $proposalRepository->findOneBy(['id' => $proposalid]);
         if (!$proposal) {
@@ -357,12 +397,22 @@ class CreateVoteController extends AbstractController
     public function listusers(
         string $uuid,
         EventsRepository $eventsRepository,
-        UsersRepository $usersRepository
+        UsersRepository $usersRepository,
+        HubInterface $sentryHub
     ): Response {
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
             throw $this->createNotFoundException('Event not found');
         }
+        $sentryHub->configureScope(function (Scope $scope) use ($event) {
+            $scope->setUser([
+                'id' => $event->getUuid(),
+                'email' => $event->getMail(),
+                'username' => $event->getName(),
+            ]);
+            $scope->setTag('role', 'organizer');
+            $scope->setTag('event_uuid', $event->getUuid());
+        });
 
         $users = $usersRepository->findBy(['event_id' => $event]);
 
@@ -377,9 +427,10 @@ class CreateVoteController extends AbstractController
     public function paramusers(
         Request $request,
         string $uuid,
-        MailerInterface $mailer,
+        NotificationMailer $notifier,
         EventsRepository $eventsRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
@@ -390,25 +441,8 @@ class CreateVoteController extends AbstractController
         $uuidd = uuid_create(UUID_TYPE_RANDOM);
         $users->setUuid($uuidd);
         $users->setEventId($event);
-        $form = $this->createFormBuilder($users)
-            ->add('mail', EmailType::class)
-            ->add('name')
-            ->add('factor', ChoiceType::class, [
-                'choices' => [
-                    '1' => '1',
-                    '2' => '2',
-                    '3' => '3',
-                    '4' => '4',
-                    '5' => '5',
-                    '6' => '6',
-                    '7' => '7',
-                    '8' => '8',
-                    '9' => '9',
-                    '10' => '10',
-                ],
-            ])
-            ->add('save', SubmitType::class, ['label' => 'Valider'])
-            ->getForm();
+        $form = $this->createForm(UserType::class, $users)
+            ->add('save', SubmitType::class, ['label' => 'Valider']);
 
         $form->handleRequest($request);
 
@@ -419,18 +453,14 @@ class CreateVoteController extends AbstractController
             $entityManager->flush();
 
             $mail = $form->get('mail')->getData();
-
-            $email = (new TemplatedEmail())
-                ->from('noemie.ployet@r2as.org')
-                ->to($mail)
-                ->subject('Votre invitation au vote')
-                ->htmlTemplate('emails/new_user.html.twig')
-                ->context([
-                    'uuid' => $uuidd,
-                    'event' => $event,
+            // Sentry user context: identify invited user by email/uuid
+            $sentryHub->configureScope(function (Scope $scope) use ($uuidd, $mail) {
+                $scope->setUser([
+                    'id' => $uuidd,
+                    'email' => $mail,
                 ]);
-
-            $mailer->send($email);
+            });
+            $notifier->sendNewUser($mail, $uuidd, $event);
 
             $this->addFlash('success', 'Le votant a été ajouté et un email lui a été envoyé.');
 
@@ -448,19 +478,18 @@ class CreateVoteController extends AbstractController
     public function paramusersbatch(
         Request $request,
         string $uuid,
-        MailerInterface $mailer,
+        NotificationMailer $notifier,
         EventsRepository $eventsRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        HubInterface $sentryHub
     ): Response {
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
             throw $this->createNotFoundException('Event not found');
         }
 
-        $form = $this->createFormBuilder()
-            ->add('csv', TextareaType::class)
-            ->add('save', SubmitType::class, ['label' => 'Valider'])
-            ->getForm();
+        $form = $this->createForm(UsersBatchType::class)
+            ->add('save', SubmitType::class, ['label' => 'Valider']);
 
         $form->handleRequest($request);
 
@@ -483,17 +512,14 @@ class CreateVoteController extends AbstractController
                 $entityManager->persist($users);
                 $entityManager->flush();
 
-                $email = (new TemplatedEmail())
-                    ->from('noemie.ployet@r2as.org')
-                    ->to($record['email'])
-                    ->subject('Votre invitation au vote')
-                    ->htmlTemplate('emails/new_user.html.twig')
-                    ->context([
-                        'uuid' => $uuidd,
-                        'event' => $event,
+                // Sentry user context per invited user
+                $sentryHub->withScope(function (Scope $scope) use ($uuidd, $record, $notifier, $event) {
+                    $scope->setUser([
+                        'id' => $uuidd,
+                        'email' => $record['email'] ?? null,
                     ]);
-
-                $mailer->send($email);
+                    $notifier->sendNewUser($record['email'], $uuidd, $event);
+                });
             }
 
             $this->addFlash('success', 'Les votants ont été importés avec succès et les emails ont été envoyés.');
@@ -506,5 +532,14 @@ class CreateVoteController extends AbstractController
             'event' => $event,
             'form' => $form->createView(),
         ]);
+    }
+
+    private function getEventOr404(EventsRepository $eventsRepository, string $uuid): Events
+    {
+        $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
+        if (!$event) {
+            throw $this->createNotFoundException('Event not found');
+        }
+        return $event;
     }
 }

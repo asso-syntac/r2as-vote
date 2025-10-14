@@ -1,0 +1,7 @@
+parameters:
+  level: 5
+  paths:
+    - src
+  checkGenericClassInNonGenericObjectType: false
+  checkMissingIterableValueType: false
+  inferPrivatePropertyTypeFromConstructor: true

@@ -8,3 +8,10 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+###> docker/mercure-artifacts ###
+# Mercure hub (FrankenPHP) SQLite store when running docker-compose at repo root
+/mercure.db
+/mercure.db-shm
+/mercure.db-wal
+###< docker/mercure-artifacts ###

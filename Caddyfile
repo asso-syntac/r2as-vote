@@ -8,4 +8,17 @@
     root * /app/public
     encode zstd br gzip
     php_server
+
+    # Enable Mercure hub (FrankenPHP integration)
+    route {
+        mercure {
+            # In development, allow anonymous subscribers
+            anonymous
+            cors_origins *
+            # Sign publisher JWT using secret from env
+            publisher_jwt {$MERCURE_JWT_SECRET}
+            # For production, also secure subscribers:
+            # subscriber_jwt {$MERCURE_JWT_SECRET}
+        }
+    }
 }

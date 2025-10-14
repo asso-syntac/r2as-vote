@@ -56,7 +56,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter un votant</h3>
                 <p class="text-gray-600 text-sm mb-4">Ajoutez un participant individuel au vote</p>
-                <a href="/param-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                <a href="{{ path('param_users', { uuid: uuid }) }}" class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Ajouter
                 </a>
             </div>
@@ -72,7 +72,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Import en masse</h3>
                 <p class="text-gray-600 text-sm mb-4">Importez plusieurs votants via CSV</p>
-                <a href="/param-users-batch/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                <a href="{{ path('param_users_batch', { uuid: uuid }) }}" class="block w-full text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Importer
                 </a>
             </div>
@@ -88,7 +88,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Gérer les votants</h3>
                 <p class="text-gray-600 text-sm mb-4">Consultez et modifiez la liste des votants</p>
-                <a href="/list-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                <a href="{{ path('list_users', { uuid: uuid }) }}" class="block w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Gérer
                 </a>
             </div>
@@ -104,7 +104,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter une proposition</h3>
                 <p class="text-gray-600 text-sm mb-4">Créez une nouvelle question à voter</p>
-                <a href="/param-proposals/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                <a href="{{ path('param_proposals', { uuid: uuid }) }}" class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Ajouter
                 </a>
             </div>
@@ -120,7 +120,7 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Consulter les résultats</h3>
                 <p class="text-gray-600 text-sm mb-4">Visualisez les résultats du vote en temps réel</p>
-                <a href="/results/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-r2as-primary hover:bg-r2as-secondary text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                <a href="{{ path('results', { uuid: uuid }) }}" class="block w-full text-center px-4 py-2 bg-r2as-primary hover:bg-r2as-secondary text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Voir les résultats
                 </a>
             </div>
@@ -135,4 +135,34 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            const hubUrl = '{{ mercure_public_url|e('js') }}';
+            const topic = 'https://r2as.example/topics/event/{{ uuid }}';
+            if (!hubUrl) return;
+            try {
+                const url = new URL(hubUrl);
+                url.searchParams.append('topic', topic);
+                const es = new EventSource(url.toString());
+                es.onmessage = function (e) {
+                    try {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'vote.cast') {
+                            const msg = `Nouveau vote reçu (proposition #${data.proposal_id}, statut: ${data.status}).`;
+                            // Simple toast
+                            const el = document.createElement('div');
+                            el.innerText = msg;
+                            el.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-3 rounded shadow';
+                            document.body.appendChild(el);
+                            setTimeout(() => el.remove(), 4000);
+                        }
+                    } catch (_) { /* noop */ }
+                };
+            } catch (_e) { /* noop */ }
+        })();
+    </script>
 {% endblock %}

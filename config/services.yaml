@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
+    app.mail_from: '%env(string:MAIL_FROM)%'
 
 services:
     # default configuration for services in *this* file
@@ -22,6 +23,29 @@ services:
     App\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
+
+    # Sentry structured logs: set minimum level for LogsHandler
+    Sentry\SentryBundle\Monolog\LogsHandler:
+        arguments:
+            - !php/const Monolog\Logger::INFO
+
+when@dev:
+  services:
+    # In dev, capture all logs including DEBUG into Sentry Structured Logs
+    Sentry\SentryBundle\Monolog\LogsHandler:
+      arguments:
+        - !php/const Monolog\Logger::DEBUG
+    # Register BreadcrumbHandler service for Monolog
+    Sentry\Monolog\BreadcrumbHandler:
+      arguments:
+        - '@Sentry\State\HubInterface'
+        - !php/const Monolog\Logger::DEBUG
+
+    # Mercure publisher service (unused if MercureBundle is used). Commented to avoid confusion.
+    # App\Service\MercurePublisher:
+    #   arguments:
+    #     $hubUrl: '%env(default::MERCURE_URL)%'
+    #     $jwt: '%env(default::MERCURE_JWT)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
