@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frankenphp:
     build: .
@@ -14,11 +12,36 @@ services:
       - .env.local
     environment:
       - APP_ENV=dev
-      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/app.db
+      - DATABASE_URL=postgresql://r2as:r2as@postgres:5432/r2as_vote?serverVersion=17&charset=utf8
       - SERVER_NAME=:80
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - r2as-network
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: r2as-vote-postgres
+    environment:
+      POSTGRES_USER: r2as
+      POSTGRES_PASSWORD: r2as
+      POSTGRES_DB: r2as_vote
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U r2as -d r2as_vote"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - r2as-network
 
 networks:
   r2as-network:
     driver: bridge
+
+volumes:
+  postgres-data:

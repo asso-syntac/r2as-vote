@@ -15,7 +15,7 @@ FROM dunglas/frankenphp:latest-php8.3
 RUN install-php-extensions \
     intl \
     pdo \
-    pdo_sqlite \
+    pdo_pgsql \
     zip \
     xml
 

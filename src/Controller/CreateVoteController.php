@@ -69,6 +69,7 @@ class CreateVoteController extends AbstractController
                 ->htmlTemplate('emails/new_vote.html.twig')
                 ->context([
                     'uuid' => $uuid,
+                    'event' => $event,
                 ]);
 
             $mailer->send($email);
