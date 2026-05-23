@@ -21,7 +21,7 @@ class Events
     #[ORM\Column(type: 'string', length: 1024, nullable: true)]
     private $description;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
     private $uuid;
 
     #[ORM\Column(type: 'string', length: 255)]

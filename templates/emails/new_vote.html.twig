@@ -1,6 +1,29 @@
-<p>
-Bonjour,<br>
-Voici votre lien pour administrer la période que vous venez de créer : <a href="https://vote.r2as.org/param-vote/{{ uuid }}">https://vote.r2as.org/param-vote/{{ uuid }}</a><br>
+<!DOCTYPE html>
+<html lang="fr">
+<body style="font-family: Helvetica, Arial, sans-serif; color: #222; max-width: 600px; margin: auto;">
+    <h2 style="color: #2a1c69;">Votre vote a été créé</h2>
 
-Bonne utilisation !
-</p>
+    <p>Bonjour,</p>
+
+    <p>Vous venez de créer le vote <strong>« {{ event.name }} »</strong> sur R2AS Vote.</p>
+
+    <p>
+        Voici votre lien d'administration personnel :<br>
+        <a href="https://vote.r2as.org/param-vote/{{ uuid }}">https://vote.r2as.org/param-vote/{{ uuid }}</a>
+    </p>
+
+    <p style="background: #fff4d6; border-left: 4px solid #f0c14b; padding: 12px;">
+        <strong>Conservez précieusement ce lien.</strong>
+        Il ne peut pas être renvoyé et permet d'administrer votre vote (ajout de votants, propositions, consultation des résultats, ouverture/clôture).
+    </p>
+
+    <p>Prochaines étapes :</p>
+    <ol>
+        <li>Ajouter les propositions sur lesquelles vos votants devront se prononcer.</li>
+        <li>Inviter les votants (un par un ou via import CSV) ; chacun recevra un lien personnel par email.</li>
+        <li>Consulter les résultats à tout moment depuis votre lien d'administration.</li>
+    </ol>
+
+    <p>Bonne utilisation,<br>L'équipe R2AS Vote</p>
+</body>
+</html>

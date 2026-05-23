@@ -1,7 +1,39 @@
-<p>
-Bonjour,<br>
-Vous venez d'être invité à participer au vote {{ event.name }}. <br>
-Voici votre lien secret vous permettant d'accéder à la plateforme <a href="https://vote.r2as.org/vote/{{ uuid }}">https://vote.r2as.org/vote/{{ uuid }}</a><br>
+<!DOCTYPE html>
+<html lang="fr">
+<body style="font-family: Helvetica, Arial, sans-serif; color: #222; max-width: 600px; margin: auto;">
+    <h2 style="color: #2a1c69;">Vous êtes invité à voter</h2>
 
-Bonne utilisation !
-</p>
+    <p>Bonjour {{ user.name }},</p>
+
+    <p>
+        Vous êtes invité par <strong>{{ event.mail }}</strong> à participer au vote
+        <strong>« {{ event.name }} »</strong>.
+    </p>
+
+    {% if event.description %}
+        <p style="background: #f5f5f5; padding: 12px; border-left: 4px solid #2a1c69;">
+            {{ event.description|nl2br }}
+        </p>
+    {% endif %}
+
+    <p>
+        Voici votre lien de vote personnel :<br>
+        <a href="https://vote.r2as.org/vote/{{ uuid }}">https://vote.r2as.org/vote/{{ uuid }}</a>
+    </p>
+
+    <p>
+        Vous disposez de <strong>{{ user.factor }} voix</strong> sur chaque proposition.
+    </p>
+
+    <p style="background: #fff4d6; border-left: 4px solid #f0c14b; padding: 12px;">
+        <strong>Attention :</strong> votre vote est définitif. Une fois que vous aurez voté pour, contre ou abstention sur une proposition, vous ne pourrez plus modifier ce choix.
+    </p>
+
+    <p>
+        Si vous n'attendiez pas cet email, vous pouvez l'ignorer ou contacter
+        <a href="mailto:{{ event.mail }}">{{ event.mail }}</a>.
+    </p>
+
+    <p>Bonne participation,<br>L'équipe R2AS Vote</p>
+</body>
+</html>

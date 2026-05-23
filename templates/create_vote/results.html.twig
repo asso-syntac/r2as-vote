@@ -25,6 +25,14 @@
         </div>
     </div>
 
+    {% if responsesType1|length == 0 %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded">
+        <p class="text-sm text-blue-800">
+            Aucun vote n'a encore été enregistré. Les résultats apparaîtront ici dès que les votants auront commencé à voter.
+        </p>
+    </div>
+    {% endif %}
+
     <!-- Résultats par proposition -->
     <div class="space-y-6 mb-8">
         {% for p in proposals %}
@@ -127,7 +135,7 @@
     <div class="bg-white rounded-lg shadow-lg p-8">
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Participation</h2>
-            <p class="text-gray-600">Votants ayant répondu à au moins une proposition</p>
+            <p class="text-gray-600">Liste des votants ayant participé. Le détail de leur vote reste anonyme.</p>
         </div>
 
         {% set newArray = [] %}
@@ -137,9 +145,12 @@
             {% endif %}
         {% endfor %}
 
+        {% set totalUsers = event.users|length %}
         <div class="mb-4">
             <p class="text-sm text-gray-600">
-                <span class="font-semibold text-gray-900">{{ newArray|length }}</span> votant(s) ont participé
+                <span class="font-semibold text-gray-900">{{ newArray|length }}</span> votant{{ newArray|length > 1 ? 's' : '' }}
+                {{ newArray|length > 1 ? 'ont' : 'a' }} participé
+                {% if totalUsers > 0 %}sur {{ totalUsers }} ({{ ((newArray|length / totalUsers) * 100)|round(1) }} %){% endif %}
             </p>
         </div>
 
@@ -153,7 +164,7 @@
                         </svg>
                         <div class="min-w-0 flex-1">
                             <p class="text-sm font-medium text-gray-900 truncate">{{ r.user_name ?? 'Votant supprimé' }}</p>
-                            <p class="text-xs text-gray-600 truncate">{{ r.user_mail ?? '—' }}</p>
+                            <p class="text-xs text-gray-600 truncate">{{ r.user_mail ?? '-' }}</p>
                         </div>
                     </div>
                     {% set displayedUsers = displayedUsers|merge([r.user_uuid]) %}

@@ -14,29 +14,29 @@
 
                 <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if event.state %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
                     <span class="w-2 h-2 rounded-full mr-2 {% if event.state %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
-                    Vote {% if event.state %}activé{% else %}désactivé{% endif %}
+                    Vote {% if event.state %}ouvert{% else %}clos - les votants ne peuvent plus voter{% endif %}
                 </div>
             </div>
 
             <div>
                 {% if event.state %}
-                    <form method="post" action="{{ path('disablevote', { uuid: uuid }) }}" class="inline" onsubmit="return confirm('Confirmer la désactivation du vote ?');">
+                    <form method="post" action="{{ path('disablevote', { uuid: uuid }) }}" class="inline" onsubmit="return confirm('Clore le vote ? Les votants n\'ayant pas encore voté ne pourront plus le faire.');">
                         <input type="hidden" name="_token" value="{{ csrf_token('disable_vote' ~ uuid) }}">
-                        <button type="submit" aria-label="Désactiver le vote {{ event.name }}" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                        <button type="submit" aria-label="Clore le vote {{ event.name }}" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
-                            Désactiver
+                            Clore le vote
                         </button>
                     </form>
                 {% else %}
-                    <form method="post" action="{{ path('enablevote', { uuid: uuid }) }}" class="inline" onsubmit="return confirm('Confirmer l\'activation du vote ?');">
+                    <form method="post" action="{{ path('enablevote', { uuid: uuid }) }}" class="inline" onsubmit="return confirm('Rouvrir le vote ?');">
                         <input type="hidden" name="_token" value="{{ csrf_token('enable_vote' ~ uuid) }}">
-                        <button type="submit" aria-label="Activer le vote {{ event.name }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
+                        <button type="submit" aria-label="Rouvrir le vote {{ event.name }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Activer
+                            Rouvrir le vote
                         </button>
                     </form>
                 {% endif %}
@@ -55,7 +55,7 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter un votant</h3>
-                <p class="text-gray-600 text-sm mb-4">Ajoutez un participant individuel au vote</p>
+                <p class="text-gray-600 text-sm mb-4">Ajoutez un votant individuel</p>
                 <a href="/param-users/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Ajouter
                 </a>
@@ -103,7 +103,7 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Ajouter une proposition</h3>
-                <p class="text-gray-600 text-sm mb-4">Créez une nouvelle question à voter</p>
+                <p class="text-gray-600 text-sm mb-4">Créez une nouvelle proposition</p>
                 <a href="/param-proposals/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Ajouter
                 </a>
@@ -119,7 +119,7 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Consulter les résultats</h3>
-                <p class="text-gray-600 text-sm mb-4">Visualisez les résultats du vote en temps réel</p>
+                <p class="text-gray-600 text-sm mb-4">Consultez les résultats actuels du vote</p>
                 <a href="/results/{{ uuid }}" class="block w-full text-center px-4 py-2 bg-r2as-primary hover:bg-r2as-secondary text-white font-medium rounded-lg transition duration-200 motion-reduce:transition-none">
                     Voir les résultats
                 </a>

@@ -24,13 +24,18 @@ use Symfony\Component\Routing\Attribute\Route;
 use League\Csv\Reader;
 use League\Csv\Statement;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Doctrine\ORM\EntityManagerInterface;
 
 class CreateVoteController extends AbstractController
 {
     #[Route('/new-vote', name: 'create_vote')]
-    public function index(Request $request, MailerInterface $mailer, EntityManagerInterface $entityManager): Response
-    {
+    public function index(
+        Request $request,
+        MailerInterface $mailer,
+        EntityManagerInterface $entityManager,
+        RateLimiterFactory $createVoteLimiter
+    ): Response {
         $uuid = uuid_create(UUID_TYPE_RANDOM);
         $event = new Events();
         $event->setUuid($uuid);
@@ -41,10 +46,16 @@ class CreateVoteController extends AbstractController
             ->add('mail', EmailType::class)
             ->add('save', SubmitType::class, ['label' => 'Valider'])
             ->getForm();
-        
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $limit = $createVoteLimiter->create($request->getClientIp())->consume();
+            if (!$limit->isAccepted()) {
+                $this->addFlash('error', 'Trop de votes créés récemment depuis cette adresse. Réessaie dans une heure.');
+                return $this->redirectToRoute('create_vote');
+            }
+
             $event = $form->getData();
 
             $entityManager->persist($event);
@@ -53,7 +64,6 @@ class CreateVoteController extends AbstractController
             $mail = $form->get('mail')->getData();
 
             $email = (new TemplatedEmail())
-                ->from('noemie.ployet@r2as.org')
                 ->to($mail)
                 ->subject('Admin : nouveau vote créé')
                 ->htmlTemplate('emails/new_vote.html.twig')
@@ -357,7 +367,8 @@ class CreateVoteController extends AbstractController
     public function listusers(
         string $uuid,
         EventsRepository $eventsRepository,
-        UsersRepository $usersRepository
+        UsersRepository $usersRepository,
+        ResponseType1Repository $responseType1Repository
     ): Response {
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
@@ -366,10 +377,23 @@ class CreateVoteController extends AbstractController
 
         $users = $usersRepository->findBy(['event_id' => $event]);
 
+        $votedUserIds = [];
+        foreach ($responseType1Repository->findBy(['event_id' => $event]) as $r) {
+            try {
+                $u = $r->getUserId();
+                if ($u) {
+                    $votedUserIds[$u->getId()] = true;
+                }
+            } catch (\Doctrine\ORM\EntityNotFoundException $e) {
+                // user supprimé : ignoré
+            }
+        }
+
         return $this->render('create_vote/list_users.html.twig', [
             'uuid' => $uuid,
             'event' => $event,
             'users' => $users,
+            'votedUserIds' => $votedUserIds,
         ]);
     }
 
@@ -421,13 +445,13 @@ class CreateVoteController extends AbstractController
             $mail = $form->get('mail')->getData();
 
             $email = (new TemplatedEmail())
-                ->from('noemie.ployet@r2as.org')
                 ->to($mail)
                 ->subject('Votre invitation au vote')
                 ->htmlTemplate('emails/new_user.html.twig')
                 ->context([
                     'uuid' => $uuidd,
                     'event' => $event,
+                    'user' => $users,
                 ]);
 
             $mailer->send($email);
@@ -468,35 +492,77 @@ class CreateVoteController extends AbstractController
             $import = $form->get('csv')->getData();
 
             $reader = Reader::createFromString($import);
-            $records = $reader->getRecords(['name', 'email', 'factor']);
+            $records = iterator_to_array($reader->getRecords(['name', 'email', 'factor']), false);
 
-            foreach ($records as $row => $record){
+            if (count($records) > 5000) {
+                $this->addFlash('error', 'Le CSV dépasse la limite de 5000 lignes.');
+                return $this->redirectToRoute('param_users_batch', ['uuid' => $uuid]);
+            }
+
+            $errors = [];
+            foreach ($records as $row => $record) {
+                $line = $row + 1;
+                $mail = trim($record['email'] ?? '');
+                $factor = trim((string) ($record['factor'] ?? ''));
+
+                if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+                    $errors[] = "Ligne $line : email invalide ($mail).";
+                }
+                if ($factor !== '' && (!ctype_digit($factor) || (int) $factor < 1 || (int) $factor > 10)) {
+                    $errors[] = "Ligne $line : factor doit être un entier entre 1 et 10 (reçu : $factor).";
+                }
+            }
+
+            if ($errors) {
+                foreach (array_slice($errors, 0, 10) as $e) {
+                    $this->addFlash('error', $e);
+                }
+                if (count($errors) > 10) {
+                    $this->addFlash('error', sprintf('… et %d autres erreurs. Aucun votant n\'a été importé.', count($errors) - 10));
+                }
+                return $this->redirectToRoute('param_users_batch', ['uuid' => $uuid]);
+            }
+
+            $createdUsers = [];
+            foreach ($records as $record) {
                 $uuidd = uuid_create(UUID_TYPE_RANDOM);
-                $users = new Users();
-                $users
+                $factor = trim((string) ($record['factor'] ?? ''));
+                $user = new Users();
+                $user
                     ->setUuid($uuidd)
                     ->setEventId($event)
-                    ->setMail($record['email'])
-                    ->setName($record['name'])
-                    ->setFactor($record['factor'])
+                    ->setMail(trim($record['email']))
+                    ->setName(trim($record['name'] ?? ''))
+                    ->setFactor($factor === '' ? 1 : (int) $factor)
                 ;
-                $entityManager->persist($users);
-                $entityManager->flush();
+                $entityManager->persist($user);
+                $createdUsers[] = ['user' => $user, 'uuid' => $uuidd];
+            }
+            $entityManager->flush();
 
+            $mailFailures = 0;
+            foreach ($createdUsers as $entry) {
                 $email = (new TemplatedEmail())
-                    ->from('noemie.ployet@r2as.org')
-                    ->to($record['email'])
+                    ->to($entry['user']->getMail())
                     ->subject('Votre invitation au vote')
                     ->htmlTemplate('emails/new_user.html.twig')
                     ->context([
-                        'uuid' => $uuidd,
+                        'uuid' => $entry['uuid'],
                         'event' => $event,
+                        'user' => $entry['user'],
                     ]);
-
-                $mailer->send($email);
+                try {
+                    $mailer->send($email);
+                } catch (\Throwable $e) {
+                    $mailFailures++;
+                }
             }
 
-            $this->addFlash('success', 'Les votants ont été importés avec succès et les emails ont été envoyés.');
+            if ($mailFailures > 0) {
+                $this->addFlash('warning', sprintf('%d votant(s) importés mais %d email(s) n\'ont pas pu être envoyés.', count($createdUsers), $mailFailures));
+            } else {
+                $this->addFlash('success', sprintf('%d votant(s) importé(s) et email(s) envoyé(s).', count($createdUsers)));
+            }
 
             return $this->redirectToRoute('param_users_batch', ['uuid' => $uuid]);
         }

@@ -70,7 +70,7 @@
                             <div class="mt-6 pt-6 border-t border-gray-200">
                                 <p class="text-sm text-gray-600 mb-4">Sélectionnez votre réponse :</p>
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'positive' }) }}">
+                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'positive' }) }}" onsubmit="return confirm('Voter POUR cette proposition ? Ce choix est définitif.')">
                                         <input type="hidden" name="_token" value="{{ csrf_token('vote_type1' ~ uuid ~ '-' ~ p.id ~ '-positive') }}">
                                         <button type="submit"
                                                 aria-label="Voter POUR : {{ p.name }}"
@@ -82,7 +82,7 @@
                                         </button>
                                     </form>
 
-                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'negative' }) }}">
+                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'negative' }) }}" onsubmit="return confirm('Voter CONTRE cette proposition ? Ce choix est définitif.')">
                                         <input type="hidden" name="_token" value="{{ csrf_token('vote_type1' ~ uuid ~ '-' ~ p.id ~ '-negative') }}">
                                         <button type="submit"
                                                 aria-label="Voter CONTRE : {{ p.name }}"
@@ -94,7 +94,7 @@
                                         </button>
                                     </form>
 
-                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'abstention' }) }}">
+                                    <form method="post" action="{{ path('submitvotetype1', { uuid: uuid, proposalid: p.id, status: 'abstention' }) }}" onsubmit="return confirm('S\'abstenir sur cette proposition ? Ce choix est définitif.')">
                                         <input type="hidden" name="_token" value="{{ csrf_token('vote_type1' ~ uuid ~ '-' ~ p.id ~ '-abstention') }}">
                                         <button type="submit"
                                                 aria-label="S'abstenir : {{ p.name }}"
@@ -113,7 +113,7 @@
                                     <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
-                                    <span class="font-semibold text-green-800">Vous avez déjà voté pour cette proposition</span>
+                                    <span class="font-semibold text-green-800">Vous avez déjà voté sur cette proposition</span>
                                 </div>
                             </div>
                         {% endif %}
