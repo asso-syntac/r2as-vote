@@ -30,6 +30,9 @@ class Events
     #[ORM\Column(type: 'boolean')]
     private $state;
 
+    #[ORM\Column(type: 'datetime_immutable')]
+    private \DateTimeImmutable $createdAt;
+
     #[ORM\OneToMany(targetEntity: Proposal::class, mappedBy: 'event_id', orphanRemoval: true)]
     private $proposals;
 
@@ -44,6 +47,12 @@ class Events
         $this->proposals = new ArrayCollection();
         $this->users = new ArrayCollection();
         $this->responseType1s = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
     }
 
     public function getId(): ?int
