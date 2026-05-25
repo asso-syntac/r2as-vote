@@ -25,6 +25,7 @@ use League\Csv\Reader;
 use League\Csv\Statement;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
 class CreateVoteController extends AbstractController
@@ -34,7 +35,8 @@ class CreateVoteController extends AbstractController
         Request $request,
         MailerInterface $mailer,
         EntityManagerInterface $entityManager,
-        RateLimiterFactory $createVoteLimiter
+        RateLimiterFactory $createVoteLimiter,
+        LoggerInterface $logger
     ): Response {
         $uuid = uuid_create(UUID_TYPE_RANDOM);
         $event = new Events();
@@ -63,6 +65,13 @@ class CreateVoteController extends AbstractController
 
             $mail = $form->get('mail')->getData();
 
+            $logger->info('event created', [
+                'event_id' => $event->getId(),
+                'event_uuid' => $uuid,
+                'event_name' => $event->getName(),
+                'admin_mail' => $mail,
+            ]);
+
             $email = (new TemplatedEmail())
                 ->to($mail)
                 ->subject('Admin : nouveau vote créé')
@@ -72,7 +81,13 @@ class CreateVoteController extends AbstractController
                     'event' => $event,
                 ]);
 
-            $mailer->send($email);
+            try {
+                $mailer->send($email);
+                $logger->info('mail sent', ['type' => 'event_admin', 'event_id' => $event->getId(), 'to' => $mail]);
+            } catch (\Throwable $e) {
+                $logger->error('mail send failed', ['type' => 'event_admin', 'event_id' => $event->getId(), 'to' => $mail, 'error' => $e->getMessage()]);
+                throw $e;
+            }
 
             $this->addFlash('success', 'Votre vote a été créé avec succès ! Un email de confirmation a été envoyé.');
 
@@ -404,7 +419,8 @@ class CreateVoteController extends AbstractController
         string $uuid,
         MailerInterface $mailer,
         EventsRepository $eventsRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger
     ): Response {
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
@@ -455,7 +471,13 @@ class CreateVoteController extends AbstractController
                     'user' => $users,
                 ]);
 
-            $mailer->send($email);
+            try {
+                $mailer->send($email);
+                $logger->info('mail sent', ['type' => 'user_invite', 'event_id' => $event->getId(), 'user_id' => $users->getId(), 'to' => $mail]);
+            } catch (\Throwable $e) {
+                $logger->error('mail send failed', ['type' => 'user_invite', 'event_id' => $event->getId(), 'user_id' => $users->getId(), 'to' => $mail, 'error' => $e->getMessage()]);
+                throw $e;
+            }
 
             $this->addFlash('success', 'Le votant a été ajouté et un email lui a été envoyé.');
 
@@ -475,7 +497,8 @@ class CreateVoteController extends AbstractController
         string $uuid,
         MailerInterface $mailer,
         EventsRepository $eventsRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger
     ): Response {
         $event = $eventsRepository->findOneBy(['uuid' => $uuid]);
         if (!$event) {
@@ -554,10 +577,13 @@ class CreateVoteController extends AbstractController
                     ]);
                 try {
                     $mailer->send($email);
+                    $logger->info('mail sent', ['type' => 'user_invite_batch', 'event_id' => $event->getId(), 'user_id' => $entry['user']->getId(), 'to' => $entry['user']->getMail()]);
                 } catch (\Throwable $e) {
                     $mailFailures++;
+                    $logger->error('mail send failed', ['type' => 'user_invite_batch', 'event_id' => $event->getId(), 'user_id' => $entry['user']->getId(), 'to' => $entry['user']->getMail(), 'error' => $e->getMessage()]);
                 }
             }
+            $logger->info('batch invite completed', ['event_id' => $event->getId(), 'total' => count($createdUsers), 'failures' => $mailFailures]);
 
             if ($mailFailures > 0) {
                 $this->addFlash('warning', sprintf('%d votant(s) importés mais %d email(s) n\'ont pas pu être envoyés.', count($createdUsers), $mailFailures));

@@ -13,6 +13,7 @@ use App\Repository\ProposalRepository;
 use App\Repository\ResponseType1Repository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
 class VoteController extends AbstractController
@@ -67,7 +68,8 @@ class VoteController extends AbstractController
         UsersRepository $usersRepository,
         ProposalRepository $proposalRepository,
         ResponseType1Repository $responseType1Repository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger
     ): Response {
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('vote_type1' . $uuid . '-' . $proposalid . '-' . $status, $token)) {
@@ -121,6 +123,11 @@ class VoteController extends AbstractController
         } else {
             $entityManager->persist($vote);
             $entityManager->flush();
+            $logger->info('vote received', [
+                'event_id' => $event->getId(),
+                'user_id' => $user->getId(),
+                'proposal_id' => $proposal->getId(),
+            ]);
             $this->addFlash('success', 'Votre vote a été enregistré avec succès.');
         }
 
