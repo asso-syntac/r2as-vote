@@ -12,6 +12,9 @@ RUN tailwindcss -c tailwind.config.js -i ./assets/css/input.css -o /tmp/tailwind
 
 FROM dunglas/frankenphp:latest-php8.3
 
+ARG SENTRY_RELEASE=unknown
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+
 RUN install-php-extensions \
     intl \
     pdo \
@@ -39,7 +42,7 @@ RUN mkdir -p /app/var && chown -R www-data:www-data /app
 
 USER www-data
 
-EXPOSE 80 443
+EXPOSE 80 443 2019
 
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
 CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

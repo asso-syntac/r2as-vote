@@ -2,6 +2,7 @@ when@prod:
     sentry:
         dsn: '%env(SENTRY_DSN)%'
         options:
+            release: '%env(default::SENTRY_RELEASE)%'
             traces_sample_rate: 0.1
             profiles_sample_rate: 0.1
             # Add request headers, cookies, IP address and the authenticated user
