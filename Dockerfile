@@ -10,7 +10,7 @@ COPY src/ ./src/
 RUN tailwindcss -c tailwind.config.js -i ./assets/css/input.css -o /tmp/tailwind.css --minify
 
 
-FROM dunglas/frankenphp:1-php8.3
+FROM dunglas/frankenphp:1-php8.5
 
 ARG SENTRY_RELEASE=unknown
 ENV SENTRY_RELEASE=${SENTRY_RELEASE}
