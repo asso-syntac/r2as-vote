@@ -20,7 +20,7 @@
         "symfony/http-kernel": "7.4.*",
         "symfony/mailer": "7.4.*",
         "symfony/mailgun-mailer": "7.4.*",
-        "symfony/monolog-bundle": "^3.11",
+        "symfony/monolog-bundle": "^4.0",
         "symfony/polyfill-uuid": "^1.17",
         "symfony/rate-limiter": "7.4.*",
         "symfony/security-csrf": "^7.4",
