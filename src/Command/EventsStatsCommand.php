@@ -5,12 +5,13 @@ namespace App\Command;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'app:events:stats', description: 'Statistiques détaillées pour un event donné.')]
+#[AsCommand(name: 'app:events:stats', description: 'Vue d\'ensemble des events, ou statistiques détaillées d\'un event donné.')]
 class EventsStatsCommand extends Command
 {
     public function __construct(private readonly Connection $connection)
@@ -20,13 +21,17 @@ class EventsStatsCommand extends Command
 
     protected function configure(): void
     {
-        $this->addArgument('uuid', InputArgument::REQUIRED, 'UUID admin de l\'event');
+        $this->addArgument('uuid', InputArgument::OPTIONAL, 'UUID admin de l\'event (sans : vue d\'ensemble de tous les events)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $uuid = $input->getArgument('uuid');
+
+        if ($uuid === null) {
+            return $this->overview($io);
+        }
 
         $event = $this->connection->fetchAssociative(
             'SELECT id, name, description, mail, state, created_at FROM events WHERE uuid = :uuid',
@@ -55,13 +60,12 @@ class EventsStatsCommand extends Command
             'SELECT COUNT(DISTINCT user_id_id) FROM response_type1 WHERE event_id_id = :id',
             ['id' => $eventId]
         );
-        $participationRate = $totalVoters > 0 ? round($votedVoters / $totalVoters * 100, 1) : 0;
 
         $io->section('Participation');
         $io->definitionList(
             ['Votants inscrits' => $totalVoters],
             ['Ont voté (au moins 1 proposition)' => $votedVoters],
-            ['Taux de participation' => $participationRate . ' %'],
+            ['Taux de participation' => self::rate($votedVoters, $totalVoters)],
         );
 
         $propositions = $this->connection->fetchAllAssociative(
@@ -103,5 +107,61 @@ class EventsStatsCommand extends Command
         );
 
         return Command::SUCCESS;
+    }
+
+    private function overview(SymfonyStyle $io): int
+    {
+        $events = $this->connection->fetchAllAssociative(
+            'SELECT e.id, e.name, e.state, e.created_at,
+                    (SELECT COUNT(*) FROM proposal p WHERE p.event_id_id = e.id) AS proposals,
+                    (SELECT COUNT(*) FROM users u WHERE u.event_id_id = e.id) AS voters,
+                    (SELECT COALESCE(SUM(u.factor), 0) FROM users u WHERE u.event_id_id = e.id) AS voices,
+                    (SELECT COUNT(DISTINCT r.user_id_id) FROM response_type1 r WHERE r.event_id_id = e.id) AS voted
+             FROM events e
+             ORDER BY e.created_at, e.id'
+        );
+
+        if (!$events) {
+            $io->warning('Aucun event.');
+            return Command::SUCCESS;
+        }
+
+        $rows = [];
+        $totals = ['proposals' => 0, 'voters' => 0, 'voices' => 0, 'voted' => 0];
+        foreach ($events as $e) {
+            foreach ($totals as $k => $_) {
+                $totals[$k] += (int) $e[$k];
+            }
+            $rows[] = [
+                $e['id'],
+                mb_strimwidth($e['name'], 0, 40, '…'),
+                $e['state'] ? 'ouvert' : 'clos',
+                substr((string) $e['created_at'], 0, 16),
+                $e['proposals'],
+                $e['voters'],
+                $e['voices'],
+                $e['voted'],
+                self::rate((int) $e['voted'], (int) $e['voters']),
+            ];
+        }
+        $rows[] = new TableSeparator();
+        $rows[] = [
+            '', sprintf('Total (%d events)', count($events)), '', '',
+            $totals['proposals'], $totals['voters'], $totals['voices'], $totals['voted'],
+            self::rate($totals['voted'], $totals['voters']),
+        ];
+
+        $io->table(
+            ['ID', 'Nom', 'État', 'Créé le', 'Propositions', 'Votants', 'Voix', 'Ont voté', 'Participation'],
+            $rows
+        );
+        $io->comment('Détail d\'un event : app:events:stats <uuid> (uuid via app:events:list)');
+
+        return Command::SUCCESS;
+    }
+
+    private static function rate(int $voted, int $total): string
+    {
+        return ($total > 0 ? round($voted / $total * 100, 1) : 0) . ' %';
     }
 }
