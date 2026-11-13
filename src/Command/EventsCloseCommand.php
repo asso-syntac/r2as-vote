@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -55,7 +56,7 @@ class EventsCloseCommand extends Command
         $this->connection->executeStatement(
             'UPDATE events SET state = :state WHERE id = :id',
             ['state' => $targetState, 'id' => $event['id']],
-            ['state' => \PDO::PARAM_BOOL]
+            ['state' => ParameterType::BOOLEAN]
         );
 
         $io->success(sprintf(

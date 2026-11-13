@@ -11,5 +11,8 @@
 :80 {
     root * /app/public
     encode zstd br gzip
+    handle /healthz {
+        respond "ok" 200
+    }
     php_server
 }

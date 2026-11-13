@@ -1,5 +1,5 @@
 FROM alpine:3 AS css-builder
-ARG TAILWIND_VERSION=v3.4.17
+ARG TAILWIND_VERSION=v3.4.19
 WORKDIR /app
 ADD https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-linux-x64 /usr/local/bin/tailwindcss
 RUN chmod +x /usr/local/bin/tailwindcss

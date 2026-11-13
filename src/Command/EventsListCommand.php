@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -58,7 +59,7 @@ class EventsListCommand extends Command
         $sql .= ' ORDER BY e.created_at DESC LIMIT :limit';
         $params['limit'] = (int) $input->getOption('limit');
 
-        $rows = $this->connection->fetchAllAssociative($sql, $params, ['limit' => \PDO::PARAM_INT]);
+        $rows = $this->connection->fetchAllAssociative($sql, $params, ['limit' => ParameterType::INTEGER]);
 
         if (!$rows) {
             $io->warning('Aucun event ne correspond aux filtres.');

@@ -4,13 +4,14 @@ doctrine:
         charset: UTF8
 
     orm:
-        auto_generate_proxy_classes: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
         auto_mapping: true
+        # Existing schema uses sequences; DBAL 4 would otherwise default AUTO to IDENTITY on PostgreSQL.
+        identity_generation_preferences:
+            Doctrine\DBAL\Platforms\PostgreSQLPlatform: sequence
         mappings:
             App:
                 is_bundle: false
                 type: attribute
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
-                alias: App

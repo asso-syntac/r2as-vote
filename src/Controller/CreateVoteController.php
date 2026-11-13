@@ -24,7 +24,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use League\Csv\Reader;
 use League\Csv\Statement;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -35,7 +35,7 @@ class CreateVoteController extends AbstractController
         Request $request,
         MailerInterface $mailer,
         EntityManagerInterface $entityManager,
-        RateLimiterFactory $createVoteLimiter,
+        RateLimiterFactoryInterface $createVoteLimiter,
         LoggerInterface $logger
     ): Response {
         $uuid = uuid_create(UUID_TYPE_RANDOM);
